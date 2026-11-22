@@ -1,0 +1,21 @@
+{
+  "name": "trace",
+  "private": true,
+  "version": "1.0.0",
+  "description": "TRACE — cybercrime investigation & threat intelligence platform",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c \"#8b8bff,#4ade80\" \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client && npm run typecheck -w server",
+    "seed": "npm run seed -w server",
+    "sample:apk": "npm run sample:apk -w server",
+    "preview": "npm run preview -w client",
+    "start": "npm run start -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

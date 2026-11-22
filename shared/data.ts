@@ -1,0 +1,193 @@
+export interface Brand {
+  name: string;
+  keywords: string[];
+  domains: string[];
+  sector: string;
+}
+
+/** Brands commonly impersonated in Indian cybercrime. Official domains are used to
+ *  suppress false positives — a brand mention alone is never a signal. */
+export const BRANDS: Brand[] = [
+  { name: 'SBI', keywords: ['sbi', 'state bank', 'onlinesbi', 'yono'], domains: ['sbi.co.in', 'onlinesbi.sbi', 'sbiyono.sbi', 'sbi', 'sbicard.com'], sector: 'bank' },
+  { name: 'HDFC Bank', keywords: ['hdfc'], domains: ['hdfcbank.com', 'hdfc.com', 'hdfcbank.net'], sector: 'bank' },
+  { name: 'ICICI Bank', keywords: ['icici'], domains: ['icicibank.com', 'icicibank.co.in'], sector: 'bank' },
+  { name: 'Axis Bank', keywords: ['axis bank', 'axisbank'], domains: ['axisbank.com', 'axisbank.co.in'], sector: 'bank' },
+  { name: 'Punjab National Bank', keywords: ['pnb', 'punjab national'], domains: ['pnbindia.in', 'pnb.co.in'], sector: 'bank' },
+  { name: 'Kotak Bank', keywords: ['kotak'], domains: ['kotak.com', 'kotakbank.com'], sector: 'bank' },
+  { name: 'Paytm', keywords: ['paytm'], domains: ['paytm.com', 'paytmbank.com', 'paytm.in'], sector: 'wallet' },
+  { name: 'PhonePe', keywords: ['phonepe', 'phone pe'], domains: ['phonepe.com'], sector: 'wallet' },
+  { name: 'Google Pay', keywords: ['gpay', 'google pay'], domains: ['google.com', 'pay.google.com'], sector: 'wallet' },
+  { name: 'Amazon', keywords: ['amazon'], domains: ['amazon.in', 'amazon.com', 'amazonpay.in'], sector: 'commerce' },
+  { name: 'Flipkart', keywords: ['flipkart'], domains: ['flipkart.com'], sector: 'commerce' },
+  { name: 'India Post', keywords: ['india post', 'indiapost'], domains: ['indiapost.gov.in', 'indiapost.in'], sector: 'logistics' },
+  { name: 'Income Tax Department', keywords: ['income tax', 'incometax'], domains: ['incometax.gov.in', 'incometaxindia.gov.in'], sector: 'government' },
+  { name: 'UIDAI', keywords: ['uidai', 'aadhaar', 'aadhar'], domains: ['uidai.gov.in', 'eaadhaar.uidai.gov.in'], sector: 'government' },
+  { name: 'TRAI', keywords: ['trai'], domains: ['trai.gov.in'], sector: 'government' },
+  { name: 'CBI', keywords: ['cbi'], domains: ['cbi.gov.in'], sector: 'law' },
+  { name: 'Customs', keywords: ['customs', 'custom department'], domains: ['cbic.gov.in', 'icegate.gov.in'], sector: 'government' },
+  { name: 'FedEx', keywords: ['fedex'], domains: ['fedex.com'], sector: 'logistics' },
+  { name: 'Blue Dart', keywords: ['bluedart', 'blue dart'], domains: ['bluedart.com'], sector: 'logistics' },
+  { name: 'Jio', keywords: ['jio'], domains: ['jio.com', 'jiomart.com'], sector: 'telecom' },
+  { name: 'Airtel', keywords: ['airtel'], domains: ['airtel.in', 'airtel.com'], sector: 'telecom' },
+  { name: 'LIC', keywords: ['lic'], domains: ['licindia.in'], sector: 'insurance' },
+  { name: 'EPFO', keywords: ['epfo', 'pf claim'], domains: ['epfindia.gov.in', 'epfo.gov.in'], sector: 'government' },
+  { name: 'IRCTC', keywords: ['irctc'], domains: ['irctc.co.in', 'irctc.com'], sector: 'travel' },
+  { name: 'Electricity Board', keywords: ['electricity board', 'electricity bill', 'bijli'], domains: ['bescom.org', 'mahadiscom.in', 'tnebnet.org'], sector: 'utility' },
+];
+
+/** UPI handles issued by regulated PSPs. Anything outside this list is flagged. */
+export const KNOWN_UPI_HANDLES = new Set([
+  'okaxis', 'oksbi', 'okhdfcbank', 'okicici', 'ybl', 'ibl', 'axl', 'paytm', 'apl', 'upi',
+  'airtel', 'jupiteraxis', 'fam', 'slc', 'yesbank', 'yesg', 'barodampay', 'mahb', 'cnrb',
+  'postbank', 'freecharge', 'axisb', 'pockets', 'timecosmos', 'waaxis', 'wasbi', 'wahdfcbank',
+  'waicici', 'icici', 'sbi', 'hdfcbank', 'indus', 'idfcbank', 'federal', 'rbl', 'kotak',
+  'naviaxis', 'superyes', 'abfspay', 'ujjivan', 'jkb', 'pnb', 'cnrb', 'unionbankofindia',
+]);
+
+export const EMAIL_DOMAINS = new Set([
+  'gmail.com', 'yahoo.com', 'yahoo.in', 'outlook.com', 'hotmail.com', 'live.com',
+  'rediffmail.com', 'protonmail.com', 'icloud.com', 'aol.com', 'zoho.com', 'mail.com',
+]);
+
+export const URL_SHORTENERS = new Set([
+  'bit.ly', 'tinyurl.com', 't.co', 'cut.tly', 'cutly.com', 'rb.gy', 'is.gd', 'ow.ly',
+  'buff.ly', 'shorturl.at', 'tiny.cc', 'bitly.com', 'cutt.ly', 's.id', 'rebrand.ly',
+  't.ly', 'shorturl.gg', 'urlz.fr', 'shorte.st', 'adf.ly', 'bl.ink', 'clck.ru',
+]);
+
+export const SUSPICIOUS_TLDS = new Set([
+  'xyz', 'top', 'click', 'icu', 'vip', 'live', 'shop', 'cfd', 'sbs', 'buzz', 'fit',
+  'monster', 'rest', 'quest', 'cyou', 'bond', 'work', 'support', 'help', 'surf',
+  'bar', 'beauty', 'casa', 'cam', 'life', 'makeup', 'skin', 'today', 'uno', 'wtf',
+  'tk', 'ml', 'ga', 'cf', 'gq', 'zip', 'mov', 'country', 'download', 'stream',
+]);
+
+/** Small public-suffix subset covering the domains this product sees. */
+export const MULTI_PART_SUFFIXES = [
+  'co.in', 'net.in', 'org.in', 'gen.in', 'firm.in', 'ind.in', 'gov.in', 'ac.in',
+  'nic.in', 'res.in', 'edu.in', 'mil.in', 'co.uk', 'org.uk', 'ac.uk', 'gov.uk',
+  'co.jp', 'or.jp', 'ne.jp', 'com.au', 'net.au', 'org.au', 'co.nz', 'com.sg',
+  'com.br', 'co.za', 'com.ae', 'co.il', 'com.pk', 'com.bd', 'com.np', 'com.lk',
+];
+
+export const KNOWN_TLDS = new Set([
+  'com', 'in', 'net', 'org', 'io', 'co', 'info', 'biz', 'me', 'dev', 'app', 'ai',
+  'gov', 'edu', 'mil', 'us', 'uk', 'au', 'ca', 'de', 'fr', 'ru', 'cn', 'jp', 'sg',
+  'ae', 'pk', 'bd', 'np', 'lk', 'br', 'za', 'sbi', 'link', 'online', 'site', 'store',
+  'tech', 'cloud', 'pro', 'name', 'mobi', 'asia', 'tv', 'cc', 'ws', 'to', 'ly',
+  'xyz', 'top', 'click', 'icu', 'vip', 'live', 'shop', 'cfd', 'sbs', 'buzz', 'fit',
+  'monster', 'rest', 'quest', 'cyou', 'bond', 'work', 'support', 'help', 'surf',
+  'tk', 'ml', 'ga', 'cf', 'gq', 'zip', 'mov', 'country', 'download', 'stream',
+]);
+
+export const URGENCY_PATTERNS = [
+  /\burgent(?:ly)?\b/gi,
+  /\bimmediately\b/gi,
+  /\btoday\b/gi,
+  /\bwithin\s+24\s*(?:hours|hrs)\b/gi,
+  /\blast\s+(?:warning|chance|reminder)\b/gi,
+  /\bwill\s+be\s+(?:blocked|suspended|deactivated|frozen)\b/gi,
+  /\b(?:expires?|expiring)\s+(?:today|soon)\b/gi,
+  /\bfinal\s+notice\b/gi,
+  /\bact\s+now\b/gi,
+];
+
+export const KYC_PATTERNS = [
+  /\bkyc\b/gi,
+  /\bverify\b/gi,
+  /\bverification\b/gi,
+  /\bupdate\s+(?:your\s+)?details\b/gi,
+  /\bre-?activate\b/gi,
+  /\bpan\s+(?:card\s+)?(?:update|link)/gi,
+];
+
+export const CREDENTIAL_PATTERNS = [
+  /\bshare\s+(?:the\s+|your\s+)?otp\b/gi,
+  /\b(?:enter|send|provide|tell|forward)\s+(?:the\s+|your\s+)?(?:otp|pin|cvv|password)\b/gi,
+  /\b(?:otp|pin|cvv|password|aadhaar|pan)\b(?=[^.!?]{0,40}\b(?:share|send|enter|provide|verify|update|submit)\b)/gi,
+  /\b(?:share|send|enter|provide|verify|update|submit)\b[^.!?]{0,40}\b(?:otp|pin|cvv|password|aadhaar|pan)\b/gi,
+  /\b(?:card\s+)?(?:pin|cvv|password)\b/gi,
+];
+
+export const AUTHORITY_PATTERNS = [
+  /\barrest(?:ed)?\b/gi,
+  /\bdigital\s+arrest\b/gi,
+  /\blegal\s+action\b/gi,
+  /\bfir\b/gi,
+  /\bpolice\b/gi,
+  /\bcustoms\b/gi,
+  /\bcourt\s+(?:notice|summons)\b/gi,
+  /\benforcement\s+directorate\b/gi,
+  /\bmoney\s+laundering\b/gi,
+];
+
+export const PRIZE_PATTERNS = [
+  /\bwon\b/gi,
+  /\bwinner\b/gi,
+  /\blottery\b/gi,
+  /\bcashback\b/gi,
+  /\brefund\b/gi,
+  /\bgift\b/gi,
+  /\breward\s+points?\b/gi,
+  /\blucky\s+draw\b/gi,
+  /\bprize\b/gi,
+];
+
+export const PAYMENT_PATTERNS = [
+  /\bpay\b/gi,
+  /\bpayment\b/gi,
+  /\bfee\b/gi,
+  /\bprocessing\s+(?:charge|fee)\b/gi,
+  /\bwallet\b/gi,
+  /\baccount\s+(?:number|no)\b/gi,
+  /\btransfer\b/gi,
+  /\bremit\b/gi,
+];
+
+export const APK_PATTERNS = [
+  /\.apk\b/gi,
+  /\binstall\s+(?:the\s+)?app\b/gi,
+  /\bdownload\s+(?:the\s+)?app\b/gi,
+  /\bupdate\s+(?:the\s+)?app\b/gi,
+  /\bsideload\b/gi,
+];
+
+export const SUSPICIOUS_PATH_WORDS = [
+  'login', 'signin', 'verify', 'verification', 'kyc', 'secure', 'security',
+  'update', 'claim', 'refund', 'unlock', 'confirm', 'validate', 'auth', 'account',
+  'wallet', 'payment', 'recover', 'support', 'help', 'otp', 'pin',
+];
+
+export interface DangerousPermission {
+  name: string;
+  short: string;
+  weight: number;
+  reason: string;
+}
+
+export const DANGEROUS_PERMISSIONS: DangerousPermission[] = [
+  { name: 'android.permission.SEND_SMS', short: 'SEND_SMS', weight: 14, reason: 'Can send premium or fraudulent SMS without user action.' },
+  { name: 'android.permission.READ_SMS', short: 'READ_SMS', weight: 16, reason: 'Can read OTP and bank messages — the core capability of an OTP stealer.' },
+  { name: 'android.permission.RECEIVE_SMS', short: 'RECEIVE_SMS', weight: 16, reason: 'Intercepts incoming OTPs before the user sees them.' },
+  { name: 'android.permission.READ_CONTACTS', short: 'READ_CONTACTS', weight: 8, reason: 'Harvests the contact graph for onward smishing.' },
+  { name: 'android.permission.READ_CALL_LOG', short: 'READ_CALL_LOG', weight: 8, reason: 'Exfiltrates call history and identifies banking relationships.' },
+  { name: 'android.permission.RECORD_AUDIO', short: 'RECORD_AUDIO', weight: 10, reason: 'Can record calls or ambient audio.' },
+  { name: 'android.permission.CAMERA', short: 'CAMERA', weight: 7, reason: 'Can capture documents or the user without consent.' },
+  { name: 'android.permission.READ_EXTERNAL_STORAGE', short: 'READ_STORAGE', weight: 6, reason: 'Can read downloaded statements, screenshots and KYC documents.' },
+  { name: 'android.permission.WRITE_EXTERNAL_STORAGE', short: 'WRITE_STORAGE', weight: 4, reason: 'Can stage payloads or tamper with local files.' },
+  { name: 'android.permission.SYSTEM_ALERT_WINDOW', short: 'OVERLAY', weight: 18, reason: 'Draws over banking apps — the standard overlay-injection technique.' },
+  { name: 'android.permission.REQUEST_INSTALL_PACKAGES', short: 'INSTALL_PACKAGES', weight: 12, reason: 'Can silently drop and install a second-stage payload.' },
+  { name: 'android.permission.BIND_ACCESSIBILITY_SERVICE', short: 'ACCESSIBILITY', weight: 22, reason: 'Accessibility access lets malware read screens and click for the user.' },
+  { name: 'android.permission.BIND_DEVICE_ADMIN', short: 'DEVICE_ADMIN', weight: 14, reason: 'Can resist uninstall and lock the device.' },
+  { name: 'android.permission.READ_PHONE_STATE', short: 'PHONE_STATE', weight: 6, reason: 'Reads SIM and device identifiers used for targeting.' },
+  { name: 'android.permission.ACCESS_FINE_LOCATION', short: 'FINE_LOCATION', weight: 5, reason: 'Tracks victim location.' },
+  { name: 'android.permission.RECEIVE_BOOT_COMPLETED', short: 'BOOT_COMPLETED', weight: 5, reason: 'Restarts itself after reboot for persistence.' },
+  { name: 'android.permission.QUERY_ALL_PACKAGES', short: 'QUERY_PACKAGES', weight: 9, reason: 'Enumerates installed banking and UPI apps to target.' },
+  { name: 'android.permission.CALL_PHONE', short: 'CALL_PHONE', weight: 6, reason: 'Can place calls to premium numbers or impersonate support.' },
+  { name: 'android.permission.PROCESS_OUTGOING_CALLS', short: 'OUTGOING_CALLS', weight: 8, reason: 'Can intercept and reroute outgoing calls.' },
+  { name: 'android.permission.POST_NOTIFICATIONS', short: 'NOTIFICATIONS', weight: 2, reason: 'Delivers deceptive notifications.' },
+];
+
+export const BRAND_SECTORS: Record<string, string> = Object.fromEntries(
+  BRANDS.map((b) => [b.name, b.sector]),
+);
