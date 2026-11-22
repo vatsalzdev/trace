@@ -1,5 +1,5 @@
 {
-  "reportId": "RPT-2026-0019-MWRIYIKP",
+  "reportId": "RPT-2026-0019-MWRJQ5EK",
   "case": {
     "id": "TRC-2026-0019",
     "title": "QA report case",
@@ -8,8 +8,8 @@
     "risk_score": 95,
     "source_type": "message",
     "raw_input": "URGENT! SBI KYC http://sbi-kyc-verify.in pay kyc.support@fakebank",
-    "created_at": "2026-11-22T07:37:55.031Z",
-    "updated_at": "2026-11-22T07:37:55.031Z",
+    "created_at": "2026-11-22T07:59:24.322Z",
+    "updated_at": "2026-11-22T07:59:24.322Z",
     "notes": "",
     "entity_count": 3,
     "entities": [
@@ -18,7 +18,7 @@
         "type": "domain",
         "value": "sbi-kyc-verify.in",
         "first_seen": "2026-10-09T10:00:00.000Z",
-        "last_seen": "2026-11-22T07:37:55.031Z",
+        "last_seen": "2026-11-22T07:59:24.322Z",
         "risk_score": 100,
         "metadata_json": "{\"cases\":[\"TRC-2026-0001\",\"TRC-2026-0002\",\"TRC-2026-0003\",\"TRC-2026-0007\",\"TRC-2026-0011\",\"TRC-2026-0015\",\"TRC-2026-0016\",\"TRC-2026-0017\",\"TRC-2026-0018\",\"TRC-2026-0019\"],\"suspicious\":false,\"note\":\"classes.dex\"}"
       },
@@ -27,7 +27,7 @@
         "type": "upi",
         "value": "kyc.support@fakebank",
         "first_seen": "2026-10-09T10:00:00.000Z",
-        "last_seen": "2026-11-22T07:37:55.031Z",
+        "last_seen": "2026-11-22T07:59:24.322Z",
         "risk_score": 100,
         "metadata_json": "{\"cases\":[\"TRC-2026-0001\",\"TRC-2026-0002\",\"TRC-2026-0003\",\"TRC-2026-0007\",\"TRC-2026-0011\",\"TRC-2026-0015\",\"TRC-2026-0017\",\"TRC-2026-0018\",\"TRC-2026-0019\"],\"suspicious\":true,\"note\":\"unregistered handle @fakebank\"}"
       },
@@ -35,8 +35,8 @@
         "id": 39,
         "type": "url",
         "value": "http://sbi-kyc-verify.in",
-        "first_seen": "2026-11-22T07:37:55.031Z",
-        "last_seen": "2026-11-22T07:37:55.031Z",
+        "first_seen": "2026-11-22T07:59:24.322Z",
+        "last_seen": "2026-11-22T07:59:24.322Z",
         "risk_score": 95,
         "metadata_json": "{\"cases\":[\"TRC-2026-0019\"],\"suspicious\":false,\"note\":null}"
       }
@@ -397,7 +397,7 @@
           ],
           "summary": "This message is a high-risk artefact. It triggers 6 of 11 rules for a combined weight of 95 (capped at 100). The strongest signals are financial / government impersonation (25), suspicious domain structure (25), urgency language (15). It invokes SBI while directing the recipient to sbi-kyc-verify.in, which is not an official SBI domain (sbi.co.in). Payment is redirected to kyc.support@fakebank, which uses an unregistered UPI handle — no regulated PSP issues it. Do not open the link. Preserve the message and report it to 1930 (national cybercrime helpline)."
         },
-        "created_at": "2026-11-22T07:37:55.031Z"
+        "created_at": "2026-11-22T07:59:24.322Z"
       }
     ],
     "events": [
@@ -406,19 +406,19 @@
         "case_id": "TRC-2026-0019",
         "type": "entities",
         "message": "3 indicators linked (1 new)",
-        "created_at": "2026-11-22T07:37:55.031Z"
+        "created_at": "2026-11-22T07:59:24.322Z"
       },
       {
         "id": 44,
         "case_id": "TRC-2026-0019",
         "type": "created",
         "message": "Case opened from message analysis",
-        "created_at": "2026-11-22T07:37:55.031Z"
+        "created_at": "2026-11-22T07:59:24.322Z"
       }
     ]
   },
-  "generatedAt": "2026-11-22T07:37:55.041Z",
-  "generatedAtIst": "Sunday, 22 November 2026 at 1:07:55 pm IST",
+  "generatedAt": "2026-11-22T07:59:24.334Z",
+  "generatedAtIst": "Sunday, 22 November 2026 at 1:29:24 pm IST",
   "analyst": "QA Analyst",
   "analysis": {
     "input": "URGENT! SBI KYC http://sbi-kyc-verify.in pay kyc.support@fakebank",
@@ -951,17 +951,17 @@
       "case_id": "TRC-2026-0019",
       "type": "entities",
       "message": "3 indicators linked (1 new)",
-      "created_at": "2026-11-22T07:37:55.031Z"
+      "created_at": "2026-11-22T07:59:24.322Z"
     },
     {
       "id": 44,
       "case_id": "TRC-2026-0019",
       "type": "created",
       "message": "Case opened from message analysis",
-      "created_at": "2026-11-22T07:37:55.031Z"
+      "created_at": "2026-11-22T07:59:24.322Z"
     }
   ],
   "notes": "",
   "methodology": "Deterministic rule-based analysis; no machine learning used. Every score is the sum of documented rule weights, capped at 100, with the triggering evidence retained verbatim.",
-  "integrityHash": "27feee07f33086ac44aa44d11b46aadb500102c7adb302aa3d71d488af3af8bf"
+  "integrityHash": "1f6a6d059c9c780bc6544eba047b48eabfb41c3d85602e9b3187c379c0ed34ae"
 }

@@ -217,7 +217,9 @@ app.get(
   '/api/cases/:id',
   wrap(async (req, res) => {
     const c = getCase(req.params.id);
-    if (!c) return res.status(404).json({ ok: false, error: 'Case not found' });
+    // Return a soft miss so an expected missing case is handled by the client
+    // without the browser logging a failed network resource.
+    if (!c) return res.json({ ok: false, error: 'Case not found' });
     res.json({ ok: true, case: c });
   }),
 );

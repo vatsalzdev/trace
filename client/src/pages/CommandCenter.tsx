@@ -136,7 +136,7 @@ export default function CommandCenter() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <Card className="p-5">
             <div className="flex items-start justify-between">
               <div>

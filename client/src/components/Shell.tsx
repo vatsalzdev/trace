@@ -77,11 +77,17 @@ export function Shell() {
       }
       if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key.toLowerCase() === 'g') {
-        pending = true;
         window.clearTimeout(timer);
-        timer = window.setTimeout(() => {
+        if (pending) {
+          e.preventDefault();
+          navigate(SHORTCUTS.g);
           pending = false;
-        }, 900);
+        } else {
+          pending = true;
+          timer = window.setTimeout(() => {
+            pending = false;
+          }, 900);
+        }
         return;
       }
       if (pending) {
