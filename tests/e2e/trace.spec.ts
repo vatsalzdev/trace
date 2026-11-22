@@ -741,3 +741,75 @@ test('16 console typography scales and scanner overlay aligns', async ({ page })
   console.log(`[EVIDENCE] landing typography unchanged: ${JSON.stringify(landing)}`);
   await noConsoleErrors(errors);
 });
+
+test('17 scanner highlight marks align with the underlying text glyphs', async ({ page }) => {
+  const errors = watchConsole(page, 'visual-overlay-alignment');
+  await page.goto('/app/scan');
+  await expect(page.getByTestId('console-root')).toBeVisible();
+  await page.getByLabel('Message evidence').fill(SCAM_SMS);
+  await expect(page.getByTestId('highlight').first()).toBeVisible();
+
+  for (const width of [1280, 1024]) {
+    await page.setViewportSize({ width, height: 900 });
+    const alignment = await page.evaluate(() => {
+      const input = document.querySelector<HTMLTextAreaElement>('[data-testid="scanner-input"]')!;
+      const overlay = document.querySelector<HTMLElement>('[data-testid="scanner-overlay"]')!;
+      const mark = overlay.querySelector<HTMLElement>('[data-testid="highlight"]')!;
+      const markText = mark.textContent ?? '';
+      const idx = input.value.indexOf(markText);
+      if (!markText || idx < 0) return { error: 'mark text missing from input' };
+
+      // Re-render the textarea text in a hidden div using the textarea's exact
+      // computed text metrics, then measure the same substring with a Range.
+      const cs = getComputedStyle(input);
+      const ir = input.getBoundingClientRect();
+      const mirror = document.createElement('div');
+      mirror.textContent = input.value;
+      Object.assign(mirror.style, {
+        position: 'fixed',
+        left: `${ir.left}px`,
+        top: `${ir.top}px`,
+        width: `${ir.width}px`,
+        height: `${ir.height}px`,
+        boxSizing: 'border-box',
+        padding: cs.padding,
+        border: '0px solid transparent',
+        fontFamily: cs.fontFamily,
+        fontSize: cs.fontSize,
+        fontWeight: cs.fontWeight,
+        fontStyle: cs.fontStyle,
+        lineHeight: cs.lineHeight,
+        letterSpacing: cs.letterSpacing,
+        whiteSpace: 'pre-wrap',
+        overflowWrap: 'break-word',
+        wordBreak: 'break-word',
+        pointerEvents: 'none',
+        visibility: 'hidden',
+      });
+      document.body.appendChild(mirror);
+      const range = document.createRange();
+      range.setStart(mirror.firstChild!, idx);
+      range.setEnd(mirror.firstChild!, idx + markText.length);
+      const glyph = range.getClientRects()[0] ?? range.getBoundingClientRect();
+      const mr = mark.getBoundingClientRect();
+      mirror.remove();
+      return {
+        mark: { left: mr.left, top: mr.top, width: mr.width, height: mr.height },
+        glyph: { left: glyph.left, top: glyph.top, width: glyph.width, height: glyph.height },
+        text: markText,
+      };
+    });
+    assert.ok(!('error' in alignment), alignment.error);
+    assert.ok(
+      Math.abs(alignment.mark.left - alignment.glyph.left) <= 1.5,
+      `highlight x is offset at ${width}px: ${JSON.stringify(alignment)}`,
+    );
+    assert.ok(
+      Math.abs(alignment.mark.width - alignment.glyph.width) <= 1.5,
+      `highlight width differs at ${width}px: ${JSON.stringify(alignment)}`,
+    );
+    console.log(`[EVIDENCE] visual overlay alignment @${width}: ${JSON.stringify(alignment)}`);
+    await shot(page, `visual-overlay-${width}`);
+  }
+  await noConsoleErrors(errors);
+});
