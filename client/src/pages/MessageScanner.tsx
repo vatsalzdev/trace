@@ -173,7 +173,8 @@ export default function MessageScanner() {
               <div
                 ref={overlayRef}
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 overflow-hidden border border-transparent px-4 py-3 text-[13px] leading-[1.75] text-ink-2"
+                data-testid="scanner-overlay"
+                className="evidence-text pointer-events-none absolute inset-0 overflow-hidden text-ink-2"
               >
                 <div className="whitespace-pre-wrap break-words">
                   {active ? (
@@ -201,7 +202,8 @@ export default function MessageScanner() {
                   }
                 }}
                 spellCheck={false}
-                className="relative block h-[248px] w-full resize-none border-0 bg-transparent px-4 py-3 text-[13px] leading-[1.75] text-transparent outline-none"
+                data-testid="scanner-input"
+                className="evidence-text relative block h-[248px] w-full resize-none border-0 bg-transparent text-transparent outline-none"
                 style={{ caretColor: 'var(--text)' }}
                 placeholder=""
                 aria-label="Message evidence"

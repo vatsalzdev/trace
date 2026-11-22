@@ -272,9 +272,20 @@ test('07 graph nodes, isolate, filters and overlap', async ({ page }) => {
   console.log(`[EVIDENCE] graph nodes=${nodeCount}, overlap=${overlapPct.toFixed(1)}% (${overlapping}/${pairs})`);
   await shot(page, 'graph-before-isolate');
 
-  await page.locator('.react-flow__node-entity').first().click({ force: true });
-  await expect(page.getByRole('dialog', { name: 'Entity details' })).toBeVisible({ timeout: 10_000 });
+  // Let the initial fitView settle; with a large graph the node boxes can still
+  // be moving when they first appear. Retry a few entity nodes because an
+  // overlapping node can intercept a force click at a stale centre point.
+  await page.waitForTimeout(700);
+  const drawer = page.getByRole('dialog', { name: 'Entity details' });
+  const entityNodes = page.locator('.react-flow__node-entity');
+  const attempts = Math.min(await entityNodes.count(), 8);
+  for (let i = 0; i < attempts; i++) {
+    if (await drawer.isVisible().catch(() => false)) break;
+    await entityNodes.nth(i).click({ force: true, timeout: 3000 });
+  }
+  await expect(drawer).toBeVisible({ timeout: 5000 });
   await page.keyboard.press('Escape');
+  await expect(drawer).toBeHidden({ timeout: 3000 });
   await page.getByRole('button', { name: 'Isolate' }).click();
   const dimmed = await page.locator('.react-flow__node').evaluateAll((nodes) =>
     nodes.map((n) => Number(getComputedStyle(n).opacity)),
@@ -622,12 +633,19 @@ test('15 PDF report output is unchanged by console theme', async ({ page }) => {
   };
   const normalize = (text: string) =>
     text
+      // Pagination footers: the total page count grows when the download adds a
+      // timeline event, so the second PDF can have one extra page/header.
+      .replace(/--\s*\d+\s*of\s*\d+\s*--/g, '')
+      // Repeated running headers (case id / report id / page no / timestamp).
+      .replace(
+        /T\s+R\s+A\s+C\s+E\s+TRC-[A-Z0-9-]+\s*\/\s*RPT-[A-Z0-9-]+\s+\d+\s+Deterministic rule-based analysis; no machine learning used\.\s+\w+, \d{1,2} \w+ \d{4} at \d{1,2}:\d{1,2}:\d+ [ap]m IST/g,
+        '',
+      )
+      // Volatile "Report RPT-... generated" timeline row added by downloading.
+      .replace(/\d{1,2}\s+[A-Za-z]{3},\s*\d{2}:\d{2}\s+report\s+Report\s+RPT-[A-Z0-9-]+\s+generated/g, '')
       .replace(/Generated .*? IST/gi, 'Generated <stamp> IST')
       .replace(/\w+, \d{1,2} \w+ \d{4} at \d{1,2}:\d{1,2}:\d+ [ap]m IST/g, '<timestamp>')
       .replace(/\d{1,2} [A-Za-z]{3}, \d{2}:\d{2}/g, '<short-timestamp>')
-      // Downloading a report adds a timeline event, so the second PDF has one
-      // more volatile row than the first. Strip those rows from both texts.
-      .replace(/<short-timestamp> report Report RPT-[A-Z0-9-]+ generated/g, '')
       .replace(/RPT-[A-Z0-9-]+/g, '<report-id>')
       .replace(/SHA-256\s+[a-f0-9]{64}/gi, 'SHA-256 <hash>')
       .replace(/\s+/g, ' ')
@@ -641,5 +659,85 @@ test('15 PDF report output is unchanged by console theme', async ({ page }) => {
   assert.equal(lightPdf, darkPdf, 'console theme changed the PDF text content');
   console.log(`[EVIDENCE] PDF text identical across themes after variable fields (${darkPdf.length} chars)`);
   await shot(page, 'theme-pdf-light');
+  await noConsoleErrors(errors);
+});
+
+test('16 console typography scales and scanner overlay aligns', async ({ page }) => {
+  const errors = watchConsole(page, 'typography');
+  await page.goto('/app/scan');
+  await expect(page.getByTestId('console-root')).toBeVisible();
+
+  const type = await page.evaluate(() => {
+    const root = document.querySelector<HTMLElement>('[data-testid="console-root"]')!;
+    const small = root.querySelector<HTMLElement>('[class~="text-[9px]"]')!;
+    const muted = root.querySelector<HTMLElement>('[class*="text-ink-3"]')!;
+    return {
+      rootFontSize: getComputedStyle(root).fontSize,
+      rootWeight: getComputedStyle(root).fontWeight,
+      smallFontSize: getComputedStyle(small).fontSize,
+      mutedWeight: getComputedStyle(muted).fontWeight,
+    };
+  });
+  assert.deepEqual(type, { rootFontSize: '17px', rootWeight: '500', smallFontSize: '11px', mutedWeight: '600' });
+  console.log(`[EVIDENCE] console type tokens: ${JSON.stringify(type)}`);
+
+  await page.getByLabel('Message evidence').fill(SCAM_SMS);
+  await expect(page.getByTestId('highlight').first()).toBeVisible();
+
+  for (const width of [1280, 1024]) {
+    await page.setViewportSize({ width, height: 900 });
+    const metrics = await page.evaluate(() => {
+      const overlay = document.querySelector<HTMLElement>('[data-testid="scanner-overlay"]')!;
+      const input = document.querySelector<HTMLTextAreaElement>('[data-testid="scanner-input"]')!;
+      const o = overlay.getBoundingClientRect();
+      const i = input.getBoundingClientRect();
+      const os = getComputedStyle(overlay);
+      const is = getComputedStyle(input);
+      return {
+        viewport: window.innerWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+        overlayRect: { left: o.left, top: o.top, width: o.width, height: o.height },
+        inputRect: { left: i.left, top: i.top, width: i.width, height: i.height },
+        fontSizes: [os.fontSize, is.fontSize],
+        lineHeights: [os.lineHeight, is.lineHeight],
+        overlayPadding: [os.paddingTop, os.paddingRight, os.paddingBottom, os.paddingLeft],
+        inputPadding: [is.paddingTop, is.paddingRight, is.paddingBottom, is.paddingLeft],
+        overlayBorder: os.borderTopWidth,
+      };
+    });
+    assert.equal(metrics.scrollWidth, metrics.viewport, `scanner overflows at ${width}px`);
+    assert.deepEqual(metrics.fontSizes, ['15px', '15px'], `font mismatch at ${width}px`);
+    assert.equal(metrics.lineHeights[0], metrics.lineHeights[1], `line-height mismatch at ${width}px`);
+    assert.deepEqual(metrics.overlayPadding, metrics.inputPadding, `padding mismatch at ${width}px`);
+    assert.equal(metrics.overlayBorder, '0px', `overlay border offsets highlights at ${width}px`);
+    for (const key of ['left', 'top', 'width', 'height'] as const) {
+      assert.ok(
+        Math.abs(metrics.overlayRect[key] - metrics.inputRect[key]) <= 0.5,
+        `${key} misaligned at ${width}px: ${metrics.overlayRect[key]} vs ${metrics.inputRect[key]}`,
+      );
+    }
+    console.log(`[EVIDENCE] scanner overlay @${width}: ${JSON.stringify(metrics)}`);
+    await shot(page, `scanner-overlay-${width}`);
+  }
+
+  const input = page.getByTestId('scanner-input');
+  await input.fill(`${SCAM_SMS}\n`.repeat(20));
+  await input.evaluate((el: HTMLTextAreaElement) => {
+    el.scrollTop = 120;
+    el.dispatchEvent(new Event('scroll', { bubbles: true }));
+  });
+  await expect
+    .poll(() => page.getByTestId('scanner-overlay').evaluate((el) => el.scrollTop), { timeout: 5000 })
+    .toBe(120);
+  console.log('[EVIDENCE] scanner overlay scroll follows textarea (120px)');
+
+  await page.goto('/');
+  const landing = await page.evaluate(() => ({
+    consoleRoots: document.querySelectorAll('[data-testid="console-root"]').length,
+    bodyFontSize: getComputedStyle(document.body).fontSize,
+    sampleFontSize: getComputedStyle(document.querySelector<HTMLElement>('[class~="text-[12px]"]')!).fontSize,
+  }));
+  assert.deepEqual(landing, { consoleRoots: 0, bodyFontSize: '15px', sampleFontSize: '12px' });
+  console.log(`[EVIDENCE] landing typography unchanged: ${JSON.stringify(landing)}`);
   await noConsoleErrors(errors);
 });

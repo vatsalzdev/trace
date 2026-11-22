@@ -587,6 +587,140 @@ button:disabled {
   }
 }
 
+/* ---------------- console typography (scoped; landing is untouched) ------- */
+
+.console {
+  --fs-8: 10px;
+  --fs-8-5: 10.5px;
+  --fs-9: 11px;
+  --fs-9-5: 11.5px;
+  --fs-10: 12px;
+  --fs-10-5: 12.5px;
+  --fs-11: 13px;
+  --fs-11-5: 13.5px;
+  --fs-12: 14px;
+  --fs-12-5: 14.5px;
+  --fs-13: 15px;
+  --fs-13-5: 15.5px;
+  --fs-14: 16px;
+  --fs-15: 17px;
+  --fs-18: 20px;
+  --fs-26: 28px;
+  --fs-28: 30px;
+  --fs-30: 32px;
+  --fs-32: 34px;
+  --fs-34: 36px;
+  --fs-36: 38px;
+  --fs-54: 56px;
+
+  --fw-base: 500;
+  --fw-medium: 600;
+  --fw-strong: 700;
+
+  --evidence-fs: var(--fs-13);
+  --evidence-lh: 1.7;
+  --evidence-pad-x: 16px;
+  --evidence-pad-y: 12px;
+
+  font-size: var(--fs-15);
+  font-weight: var(--fw-base);
+}
+
+.console [class~='text-[8px]'] {
+  font-size: var(--fs-8);
+}
+.console [class~='text-[8.5px]'] {
+  font-size: var(--fs-8-5);
+}
+.console [class~='text-[9px]'] {
+  font-size: var(--fs-9);
+}
+.console [class~='text-[9.5px]'] {
+  font-size: var(--fs-9-5);
+}
+.console [class~='text-[10px]'] {
+  font-size: var(--fs-10);
+}
+.console [class~='text-[10.5px]'] {
+  font-size: var(--fs-10-5);
+}
+.console [class~='text-[11px]'] {
+  font-size: var(--fs-11);
+}
+.console [class~='text-[11.5px]'] {
+  font-size: var(--fs-11-5);
+}
+.console [class~='text-[12px]'] {
+  font-size: var(--fs-12);
+}
+.console [class~='text-[12.5px]'] {
+  font-size: var(--fs-12-5);
+}
+.console [class~='text-[13px]'] {
+  font-size: var(--fs-13);
+}
+.console [class~='text-[13.5px]'] {
+  font-size: var(--fs-13-5);
+}
+.console [class~='text-[14px]'] {
+  font-size: var(--fs-14);
+}
+.console [class~='text-[15px]'] {
+  font-size: var(--fs-15);
+}
+.console [class~='text-[18px]'] {
+  font-size: var(--fs-18);
+}
+.console [class~='text-[26px]'] {
+  font-size: var(--fs-26);
+}
+.console [class~='text-[28px]'] {
+  font-size: var(--fs-28);
+}
+.console [class~='text-[30px]'] {
+  font-size: var(--fs-30);
+}
+.console [class~='text-[32px]'] {
+  font-size: var(--fs-32);
+}
+.console [class~='text-[34px]'] {
+  font-size: var(--fs-34);
+}
+.console [class~='text-[36px]'] {
+  font-size: var(--fs-36);
+}
+.console [class~='text-[54px]'] {
+  font-size: var(--fs-54);
+}
+
+.console [cmdk-group-heading] {
+  font-size: var(--fs-10);
+  font-weight: var(--fw-medium);
+}
+
+.console [class*='text-ink-3'] {
+  font-weight: var(--fw-medium);
+}
+.console .font-medium {
+  font-weight: var(--fw-medium);
+}
+.console .font-semibold,
+.console .font-bold,
+.console h1,
+.console h2,
+.console h3,
+.console h4 {
+  font-weight: var(--fw-strong);
+}
+
+/* The highlight overlay and the transparent textarea must use identical
+   text geometry. A border on only one layer used to offset marks by 1px. */
+.console .evidence-text {
+  font-size: var(--evidence-fs);
+  line-height: var(--evidence-lh);
+  padding: var(--evidence-pad-y) var(--evidence-pad-x);
+}
+
 /* ---------------- landing motion ---------------- */
 
 .preloader-curtain {
