@@ -157,15 +157,15 @@ export default function CommandCenter() {
                 <AreaChart data={series} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
                   <defs>
                     <linearGradient id="casesFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8b8bff" stopOpacity={0.18} />
-                      <stop offset="100%" stopColor="#8b8bff" stopOpacity={0} />
+                      <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.18} />
+                      <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="highFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#ff5d5d" stopOpacity={0.12} />
-                      <stop offset="100%" stopColor="#ff5d5d" stopOpacity={0} />
+                      <stop offset="0%" stopColor="var(--danger)" stopOpacity={0.12} />
+                      <stop offset="100%" stopColor="var(--danger)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.05)" strokeDasharray="0" />
+                  <CartesianGrid vertical={false} stroke="var(--grid-line)" strokeDasharray="0" />
                   <XAxis
                     dataKey="date"
                     tickFormatter={(d: string) => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
@@ -176,11 +176,11 @@ export default function CommandCenter() {
                   />
                   <YAxis hide domain={[0, 'dataMax + 1']} />
                   <Tooltip
-                    cursor={{ stroke: 'rgba(255,255,255,0.12)', strokeWidth: 1 }}
+                    cursor={{ stroke: 'var(--line-2)', strokeWidth: 1 }}
                     content={({ active, payload, label }) => {
                       if (!active || !payload?.length) return null;
                       return (
-                        <div className="rounded-md border border-line-2 bg-[#101014] px-3 py-2 shadow-xl">
+                        <div className="rounded-md border border-line-2 bg-raised px-3 py-2 shadow-xl">
                           <div className="mono text-[9px] uppercase tracking-wider text-ink-3">
                             {shortDate(String(label))}
                           </div>
@@ -195,8 +195,8 @@ export default function CommandCenter() {
                       );
                     }}
                   />
-                  <Area type="monotone" dataKey="cases" stroke="#8b8bff" strokeWidth={1.5} fill="url(#casesFill)" dot={false} activeDot={{ r: 3, fill: '#8b8bff', strokeWidth: 0 }} />
-                  <Area type="monotone" dataKey="high" stroke="#ff5d5d" strokeWidth={1.5} fill="url(#highFill)" dot={false} activeDot={{ r: 3, fill: '#ff5d5d', strokeWidth: 0 }} />
+                  <Area type="monotone" dataKey="cases" stroke="var(--accent)" strokeWidth={1.5} fill="url(#casesFill)" dot={false} activeDot={{ r: 3, fill: 'var(--accent)', strokeWidth: 0 }} />
+                  <Area type="monotone" dataKey="high" stroke="var(--danger)" strokeWidth={1.5} fill="url(#highFill)" dot={false} activeDot={{ r: 3, fill: 'var(--danger)', strokeWidth: 0 }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -230,7 +230,7 @@ export default function CommandCenter() {
                 <button
                   key={c.id}
                   onClick={() => navigate(`/app/cases/${c.id}`)}
-                  className="row-hover group grid w-full grid-cols-[92px_1fr_44px_56px_38px_46px] items-center gap-3 border-b border-line/70 px-5 py-2.5 text-left transition-colors last:border-0 hover:bg-white/[0.02]"
+                  className="row-hover group grid w-full grid-cols-[92px_1fr_44px_56px_38px_46px] items-center gap-3 border-b border-line/70 px-5 py-2.5 text-left transition-colors last:border-0 hover:bg-[var(--fill-1)]"
                 >
                   <span className="mono text-[9.5px] text-ink-3 group-hover:text-ink-2">{c.id}</span>
                   <span className="min-w-0 truncate text-[12px] text-ink-2 group-hover:text-ink">{c.title}</span>
@@ -263,7 +263,7 @@ export default function CommandCenter() {
                     <span className="mono text-[9px] text-ink-3">{ENTITY_META[entity.type]?.short}</span>
                   </div>
                   <div className="mt-1.5 flex items-center gap-2 pl-3.5">
-                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.05]">
+                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--fill-5)]">
                       <div
                         className="h-full rounded-full bg-accent/60 transition-[width] duration-500 ease-expo"
                         style={{ width: `${(Number(entity.case_count ?? 0) / maxReuse) * 100}%` }}

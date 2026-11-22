@@ -4,6 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#050506" />
+    <script>
+      // Set the console theme before styles paint. This attribute exists only
+      // on /app routes, so the landing page remains dark.
+      (function () {
+        function systemTheme() {
+          return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+        if (!/^\/app(\/|$)/.test(location.pathname)) return;
+        try {
+          var stored = localStorage.getItem('trace:theme');
+          var theme = stored === 'light' || stored === 'dark' ? stored : systemTheme();
+          if (!stored) localStorage.setItem('trace:theme', theme);
+          document.documentElement.dataset.theme = theme;
+        } catch (error) {
+          document.documentElement.dataset.theme = systemTheme();
+        }
+      })();
+    </script>
     <meta
       name="description"
       content="TRACE — deterministic cybercrime investigation and threat intelligence. Messages, links and APKs resolved into one connected case file."

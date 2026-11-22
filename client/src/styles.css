@@ -7,6 +7,11 @@
   --bg-1: #0a0a0c;
   --bg-2: #0f0f12;
   --bg-3: #141418;
+  --surface: #08080a;
+  --surface-focus: #0a0a0d;
+  --raised: #101014;
+  --graph-canvas: #0a0a0c;
+  --overlay: #15151a;
   --line: rgba(255, 255, 255, 0.07);
   --line-2: rgba(255, 255, 255, 0.12);
   --text: #ededf0;
@@ -16,10 +21,162 @@
   --danger: #ff5d5d;
   --warn: #ffb454;
   --ok: #4ade80;
+
+  /* Dark defaults for every hard-coded console surface. Light mode overrides
+     these variables only; no component-level theme rules are needed. */
+  --focus-ring: rgba(139, 139, 255, 0.8);
+  --selection-bg: rgba(139, 139, 255, 0.28);
+  --selection-text: #ffffff;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.09);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.16);
+  --ambient-1: rgba(139, 139, 255, 0.075);
+  --ambient-2: rgba(255, 255, 255, 0.035);
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-inset: rgba(255, 255, 255, 0.05);
+  --glass-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.8);
+  --btn-primary-fg: #08080a;
+  --btn-primary-hover-bg: #ffffff;
+  --btn-accent-bg: rgba(139, 139, 255, 0.14);
+  --btn-accent-border: rgba(139, 139, 255, 0.4);
+  --btn-accent-fg: #c9c9ff;
+  --btn-accent-hover-bg: rgba(139, 139, 255, 0.2);
+  --btn-accent-hover-border: rgba(139, 139, 255, 0.55);
+  --fill-1: rgba(255, 255, 255, 0.025);
+  --fill-2: rgba(255, 255, 255, 0.045);
+  --fill-3: rgba(255, 255, 255, 0.055);
+  --fill-4: rgba(255, 255, 255, 0.04);
+  --fill-5: rgba(255, 255, 255, 0.06);
+  --risk-high-fg: #ff8a8a;
+  --risk-high-bg: rgba(255, 93, 93, 0.1);
+  --risk-high-border: rgba(255, 93, 93, 0.22);
+  --risk-medium-fg: #ffc887;
+  --risk-medium-bg: rgba(255, 180, 84, 0.09);
+  --risk-medium-border: rgba(255, 180, 84, 0.22);
+  --risk-low-fg: #86efac;
+  --risk-low-bg: rgba(74, 222, 128, 0.08);
+  --risk-low-border: rgba(74, 222, 128, 0.2);
+  --mark-url-fg: #ff9d9d;
+  --mark-url-bg: rgba(255, 93, 93, 0.09);
+  --mark-upi-fg: #ffcf8a;
+  --mark-upi-bg: rgba(255, 180, 84, 0.1);
+  --mark-phone-fg: #a5b4fc;
+  --mark-phone-bg: rgba(139, 139, 255, 0.12);
+  --mark-email-fg: #7dd3fc;
+  --mark-email-bg: rgba(56, 189, 248, 0.08);
+  --mark-account-fg: #c4b5fd;
+  --mark-account-bg: rgba(196, 181, 253, 0.09);
+  --tooltip-bg: #15151a;
+  --spotlight: rgba(255, 255, 255, 0.055);
+  --grid-line: rgba(255, 255, 255, 0.05);
+  --grid-line-strong: rgba(255, 255, 255, 0.08);
+  --graph-grid: rgba(255, 255, 255, 0.055);
+  --graph-edge: rgba(255, 255, 255, 0.075);
+  --graph-edge-selected: rgba(139, 139, 255, 0.6);
+  --graph-mask: rgba(5, 5, 6, 0.72);
+  --shadow-panel: 0 20px 60px -20px rgba(0, 0, 0, 0.8);
+  --entity-domain: #8b8bff;
+  --entity-url: #ff5d5d;
+  --entity-phone: #60a5fa;
+  --entity-upi: #ffb454;
+  --entity-email: #38bdf8;
+  --entity-package: #a78bfa;
+  --entity-ip: #4ade80;
+  --entity-wallet: #f472b6;
+  --entity-ifsc: #94a3b8;
+  --entity-account: #c4b5fd;
+  --entity-case: #ededf0;
+
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-ui: cubic-bezier(0.23, 1, 0.32, 1);
   --radius: 12px;
   --sidebar: 232px;
+}
+
+/* Console-only light theme. The attribute is present on /app routes only. */
+[data-theme='light'] {
+  --bg: #fafafa;
+  --bg-1: #f4f4f6;
+  --bg-2: #ffffff;
+  --bg-3: #ececf0;
+  --surface: #ffffff;
+  --surface-focus: #ffffff;
+  --raised: #f4f4f6;
+  --graph-canvas: #fafafa;
+  --overlay: #ffffff;
+  --line: rgba(0, 0, 0, 0.08);
+  --line-2: rgba(0, 0, 0, 0.14);
+  --text: #0b0b0d;
+  --text-2: #4b4b55;
+  /* Darkened from the supplied #7a7a85: 3.86:1 on --bg-1 failed AA. */
+  --text-3: #686872;
+  /* Darkened from the supplied #5b5bf0/#d92d2d/#b45309/#15803d because
+     each failed 4.5:1 on --bg-3 (#ececf0). */
+  --accent: #5252e0;
+  --danger: #c82828;
+  --warn: #a34706;
+  --ok: #127235;
+
+  --focus-ring: rgba(82, 82, 224, 0.65);
+  --selection-bg: rgba(82, 82, 224, 0.18);
+  --selection-text: #0b0b0d;
+  --scrollbar-thumb: rgba(11, 11, 13, 0.18);
+  --scrollbar-thumb-hover: rgba(11, 11, 13, 0.3);
+  --ambient-1: rgba(82, 82, 224, 0.05);
+  --ambient-2: rgba(82, 82, 224, 0.02);
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-inset: rgba(255, 255, 255, 0.7);
+  --glass-shadow: 0 20px 60px -24px rgba(15, 23, 42, 0.28);
+  --btn-primary-fg: #ffffff;
+  --btn-primary-hover-bg: #3f3fd0;
+  --btn-accent-bg: rgba(82, 82, 224, 0.1);
+  --btn-accent-border: rgba(82, 82, 224, 0.38);
+  --btn-accent-fg: #3f3fd0;
+  --btn-accent-hover-bg: rgba(82, 82, 224, 0.16);
+  --btn-accent-hover-border: rgba(82, 82, 224, 0.55);
+  --fill-1: rgba(11, 11, 13, 0.035);
+  --fill-2: rgba(11, 11, 13, 0.06);
+  --fill-3: rgba(11, 11, 13, 0.07);
+  --fill-4: rgba(11, 11, 13, 0.055);
+  --fill-5: rgba(11, 11, 13, 0.08);
+  --risk-high-fg: #a32222;
+  --risk-high-bg: rgba(200, 40, 40, 0.08);
+  --risk-high-border: rgba(200, 40, 40, 0.2);
+  --risk-medium-fg: #8a3d00;
+  --risk-medium-bg: rgba(163, 71, 6, 0.09);
+  --risk-medium-border: rgba(163, 71, 6, 0.22);
+  --risk-low-fg: #0f6b34;
+  --risk-low-bg: rgba(18, 114, 53, 0.09);
+  --risk-low-border: rgba(18, 114, 53, 0.2);
+  --mark-url-fg: #a32222;
+  --mark-url-bg: rgba(200, 40, 40, 0.08);
+  --mark-upi-fg: #8a3d00;
+  --mark-upi-bg: rgba(163, 71, 6, 0.09);
+  --mark-phone-fg: #3f3fd0;
+  --mark-phone-bg: rgba(82, 82, 224, 0.09);
+  --mark-email-fg: #075985;
+  --mark-email-bg: rgba(2, 132, 199, 0.08);
+  --mark-account-fg: #6d28d9;
+  --mark-account-bg: rgba(109, 40, 217, 0.08);
+  --tooltip-bg: #ffffff;
+  --spotlight: rgba(11, 11, 13, 0.05);
+  --grid-line: rgba(11, 11, 13, 0.07);
+  --grid-line-strong: rgba(11, 11, 13, 0.12);
+  --graph-grid: rgba(11, 11, 13, 0.09);
+  --graph-edge: rgba(11, 11, 13, 0.18);
+  --graph-edge-selected: rgba(82, 82, 224, 0.55);
+  --graph-mask: rgba(250, 250, 250, 0.78);
+  --shadow-panel: 0 20px 60px -30px rgba(15, 23, 42, 0.35);
+  --entity-domain: #4f46e5;
+  --entity-url: #b42318;
+  --entity-phone: #2563eb;
+  --entity-upi: #9a4a00;
+  --entity-email: #0369a1;
+  --entity-package: #6d28d9;
+  --entity-ip: #127235;
+  --entity-wallet: #be185d;
+  --entity-ifsc: #475569;
+  --entity-account: #6d28d9;
+  --entity-case: #0b0b0d;
 }
 
 * {
@@ -53,8 +210,8 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(900px 420px at 50% -8%, rgba(139, 139, 255, 0.075), transparent 70%),
-    radial-gradient(600px 300px at 82% -4%, rgba(255, 255, 255, 0.035), transparent 70%);
+    radial-gradient(900px 420px at 50% -8%, var(--ambient-1), transparent 70%),
+    radial-gradient(600px 300px at 82% -4%, var(--ambient-2), transparent 70%);
 }
 
 /* 2% film grain */
@@ -76,12 +233,12 @@ body::after {
 }
 
 ::selection {
-  background: rgba(139, 139, 255, 0.28);
-  color: #fff;
+  background: var(--selection-bg);
+  color: var(--selection-text);
 }
 
 *:focus-visible {
-  outline: 1px solid rgba(139, 139, 255, 0.8);
+  outline: 1px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -93,12 +250,12 @@ body::after {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--scrollbar-thumb);
   border-radius: 10px;
   border: 3px solid var(--bg);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--scrollbar-thumb-hover);
 }
 
 h1,
@@ -154,18 +311,18 @@ button:disabled {
     left: 12%;
     right: 12%;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+    background: linear-gradient(90deg, transparent, var(--line-2), transparent);
     pointer-events: none;
   }
 
   .glass {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--glass-bg);
     backdrop-filter: blur(20px) saturate(140%);
     -webkit-backdrop-filter: blur(20px) saturate(140%);
     border: 1px solid var(--line);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.05),
-      0 20px 60px -20px rgba(0, 0, 0, 0.8);
+      inset 0 1px 0 var(--glass-inset),
+      var(--glass-shadow);
   }
 
   .label {
@@ -226,23 +383,23 @@ button:disabled {
 
   .btn-primary {
     background: var(--text);
-    color: #08080a;
+    color: var(--btn-primary-fg);
     border-color: var(--text);
     font-weight: 500;
   }
   .btn-primary:hover {
-    background: #fff;
-    border-color: #fff;
+    background: var(--btn-primary-hover-bg);
+    border-color: var(--btn-primary-hover-bg);
   }
 
   .btn-accent {
-    background: rgba(139, 139, 255, 0.14);
-    border-color: rgba(139, 139, 255, 0.4);
-    color: #c9c9ff;
+    background: var(--btn-accent-bg);
+    border-color: var(--btn-accent-border);
+    color: var(--btn-accent-fg);
   }
   .btn-accent:hover {
-    background: rgba(139, 139, 255, 0.2);
-    border-color: rgba(139, 139, 255, 0.55);
+    background: var(--btn-accent-hover-bg);
+    border-color: var(--btn-accent-hover-border);
   }
 
   .btn-ghost {
@@ -251,7 +408,7 @@ button:disabled {
     color: var(--text-2);
   }
   .btn-ghost:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--fill-4);
     color: var(--text);
     border-color: transparent;
   }
@@ -261,7 +418,7 @@ button:disabled {
     width: 100%;
     border-radius: 8px;
     border: 1px solid var(--line);
-    background: #08080a;
+    background: var(--surface);
     padding: 0 12px;
     font-size: 13.5px;
     color: var(--text);
@@ -274,8 +431,8 @@ button:disabled {
   }
   .input:focus {
     outline: none;
-    border-color: rgba(139, 139, 255, 0.45);
-    background: #0a0a0d;
+    border-color: var(--focus-ring);
+    background: var(--surface-focus);
   }
 
   .kbd {
@@ -287,7 +444,7 @@ button:disabled {
     padding: 0 5px;
     border-radius: 4px;
     border: 1px solid var(--line);
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--fill-1);
     font-family: 'JetBrains Mono Variable', monospace;
     font-size: 10px;
     color: var(--text-3);
@@ -309,19 +466,19 @@ button:disabled {
     border: 1px solid transparent;
   }
   .risk-high {
-    color: #ff8a8a;
-    background: rgba(255, 93, 93, 0.1);
-    border-color: rgba(255, 93, 93, 0.22);
+    color: var(--risk-high-fg);
+    background: var(--risk-high-bg);
+    border-color: var(--risk-high-border);
   }
   .risk-medium {
-    color: #ffc887;
-    background: rgba(255, 180, 84, 0.09);
-    border-color: rgba(255, 180, 84, 0.22);
+    color: var(--risk-medium-fg);
+    background: var(--risk-medium-bg);
+    border-color: var(--risk-medium-border);
   }
   .risk-low {
-    color: #86efac;
-    background: rgba(74, 222, 128, 0.08);
-    border-color: rgba(74, 222, 128, 0.2);
+    color: var(--risk-low-fg);
+    background: var(--risk-low-bg);
+    border-color: var(--risk-low-border);
   }
 
   .entity-chip {
@@ -333,7 +490,7 @@ button:disabled {
     padding: 0 8px;
     border-radius: 5px;
     border: 1px solid var(--line);
-    background: rgba(255, 255, 255, 0.025);
+    background: var(--fill-1);
     font-family: 'JetBrains Mono Variable', monospace;
     font-size: 11px;
     color: var(--text-2);
@@ -348,7 +505,7 @@ button:disabled {
   .entity-chip:hover {
     border-color: var(--line-2);
     color: var(--text);
-    background: rgba(255, 255, 255, 0.045);
+    background: var(--fill-2);
   }
 
   .stat-num {
@@ -361,8 +518,8 @@ button:disabled {
 
   .empty-grid {
     background-image:
-      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+      linear-gradient(var(--fill-1) 1px, transparent 1px),
+      linear-gradient(90deg, var(--fill-1) 1px, transparent 1px);
     background-size: 32px 32px;
     background-position: center;
     mask-image: radial-gradient(ellipse at center, black 20%, transparent 78%);
@@ -382,7 +539,7 @@ button:disabled {
     transition: opacity 220ms var(--ease-ui);
     background: radial-gradient(
       320px circle at var(--mx, 50%) var(--my, 50%),
-      rgba(255, 255, 255, 0.055),
+      var(--spotlight),
       transparent 65%
     );
   }
@@ -584,28 +741,28 @@ button:disabled {
   position: relative;
 }
 .mark-url {
-  color: #ff9d9d;
-  background: rgba(255, 93, 93, 0.09);
+  color: var(--mark-url-fg);
+  background: var(--mark-url-bg);
 }
 .mark-upi,
 .mark-wallet {
-  color: #ffcf8a;
-  background: rgba(255, 180, 84, 0.1);
+  color: var(--mark-upi-fg);
+  background: var(--mark-upi-bg);
 }
 .mark-phone {
-  color: #a5b4fc;
-  background: rgba(139, 139, 255, 0.12);
+  color: var(--mark-phone-fg);
+  background: var(--mark-phone-bg);
 }
 .mark-email {
-  color: #7dd3fc;
-  background: rgba(56, 189, 248, 0.08);
+  color: var(--mark-email-fg);
+  background: var(--mark-email-bg);
 }
 .mark-domain {
-  color: #ff9d9d;
+  color: var(--mark-url-fg);
 }
 .mark-account {
-  color: #c4b5fd;
-  background: rgba(196, 181, 253, 0.09);
+  color: var(--mark-account-fg);
+  background: var(--mark-account-bg);
 }
 .mark[data-tip]:hover::after {
   content: attr(data-tip);
@@ -614,7 +771,7 @@ button:disabled {
   left: 50%;
   transform: translateX(-50%);
   z-index: 40;
-  background: #15151a;
+  background: var(--tooltip-bg);
   border: 1px solid var(--line-2);
   border-radius: 6px;
   padding: 5px 8px;
@@ -623,7 +780,7 @@ button:disabled {
   color: var(--text);
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.9);
+  box-shadow: var(--shadow-panel);
 }
 
 .seg-bar {
@@ -634,7 +791,7 @@ button:disabled {
   flex: 1;
   height: 6px;
   border-radius: 1px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--fill-5);
   transition: background-color 500ms var(--ease);
 }
 
@@ -648,14 +805,14 @@ button:disabled {
   top: 10px;
   bottom: 10px;
   width: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--grid-line-strong);
 }
 .flow-line-fill {
   position: absolute;
   left: 11px;
   top: 10px;
   width: 1px;
-  background: linear-gradient(180deg, var(--accent), rgba(139, 139, 255, 0.15));
+  background: linear-gradient(180deg, var(--accent), var(--btn-accent-bg));
   transform-origin: top;
   transform: scaleY(var(--progress, 0));
 }
@@ -667,7 +824,7 @@ button:disabled {
   font-family: 'JetBrains Mono Variable', monospace;
 }
 .recharts-cartesian-grid line {
-  stroke: rgba(255, 255, 255, 0.05);
+  stroke: var(--grid-line);
 }
 .recharts-tooltip-wrapper {
   outline: none;
@@ -700,11 +857,11 @@ button:disabled {
   opacity: 0;
 }
 .react-flow__edge-path {
-  stroke: rgba(255, 255, 255, 0.14);
+  stroke: var(--line-2);
   stroke-width: 1;
 }
 .react-flow__edge.selected .react-flow__edge-path {
-  stroke: rgba(139, 139, 255, 0.6);
+  stroke: var(--graph-edge-selected);
 }
 
 @media (prefers-reduced-motion: reduce) {

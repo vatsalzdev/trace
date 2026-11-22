@@ -129,7 +129,7 @@ export default function Reports() {
               {reports.map((report) => (
                 <div
                   key={report.id}
-                  className="group grid grid-cols-[132px_96px_minmax(0,1fr)_104px_64px_88px_38px] items-center gap-3 border-b border-line/70 px-4 py-2.5 transition-colors last:border-0 hover:bg-white/[0.02]"
+                  className="group grid grid-cols-[132px_96px_minmax(0,1fr)_104px_64px_88px_38px] items-center gap-3 border-b border-line/70 px-4 py-2.5 transition-colors last:border-0 hover:bg-[var(--fill-1)]"
                 >
                   <div className="min-w-0">
                     <div className="mono truncate text-[9.5px] text-ink-2">{report.id}</div>

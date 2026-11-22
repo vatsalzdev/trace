@@ -64,18 +64,18 @@ export function compactNumber(n: number): string {
 }
 
 export const ENTITY_META: Record<EntityType | 'case', { label: string; short: string; color: string; shape: string }> = {
-  domain: { label: 'Domain', short: 'DOM', color: '#8b8bff', shape: 'rounded' },
-  url: { label: 'URL', short: 'URL', color: '#ff5d5d', shape: 'rounded' },
-  phone: { label: 'Phone', short: 'TEL', color: '#60a5fa', shape: 'pill' },
-  upi: { label: 'UPI ID', short: 'UPI', color: '#ffb454', shape: 'pill' },
-  email: { label: 'Email', short: 'EML', color: '#38bdf8', shape: 'rounded' },
-  package: { label: 'Package', short: 'PKG', color: '#a78bfa', shape: 'square' },
-  apk_hash: { label: 'APK hash', short: 'HASH', color: '#a78bfa', shape: 'square' },
-  ip: { label: 'IP address', short: 'IP', color: '#4ade80', shape: 'circle' },
-  wallet: { label: 'Wallet', short: 'WLT', color: '#f472b6', shape: 'circle' },
-  ifsc: { label: 'IFSC', short: 'IFSC', color: '#94a3b8', shape: 'rounded' },
-  account: { label: 'Account', short: 'ACC', color: '#c4b5fd', shape: 'rounded' },
-  case: { label: 'Case', short: 'CASE', color: '#ededf0', shape: 'square' },
+  domain: { label: 'Domain', short: 'DOM', color: 'var(--entity-domain)', shape: 'rounded' },
+  url: { label: 'URL', short: 'URL', color: 'var(--entity-url)', shape: 'rounded' },
+  phone: { label: 'Phone', short: 'TEL', color: 'var(--entity-phone)', shape: 'pill' },
+  upi: { label: 'UPI ID', short: 'UPI', color: 'var(--entity-upi)', shape: 'pill' },
+  email: { label: 'Email', short: 'EML', color: 'var(--entity-email)', shape: 'rounded' },
+  package: { label: 'Package', short: 'PKG', color: 'var(--entity-package)', shape: 'square' },
+  apk_hash: { label: 'APK hash', short: 'HASH', color: 'var(--entity-package)', shape: 'square' },
+  ip: { label: 'IP address', short: 'IP', color: 'var(--entity-ip)', shape: 'circle' },
+  wallet: { label: 'Wallet', short: 'WLT', color: 'var(--entity-wallet)', shape: 'circle' },
+  ifsc: { label: 'IFSC', short: 'IFSC', color: 'var(--entity-ifsc)', shape: 'rounded' },
+  account: { label: 'Account', short: 'ACC', color: 'var(--entity-account)', shape: 'rounded' },
+  case: { label: 'Case', short: 'CASE', color: 'var(--entity-case)', shape: 'square' },
 };
 
 export function entityLabel(type: EntityType | 'case'): string {

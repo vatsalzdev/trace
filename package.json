@@ -15,7 +15,8 @@
     "preview": "npm run preview -w client",
     "start": "npm run start -w server",
     "test:api": "node --test tests/api.test.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:contrast": "node scripts/check-contrast.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",

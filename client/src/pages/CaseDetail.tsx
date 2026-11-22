@@ -414,7 +414,7 @@ export default function CaseDetail() {
                   </div>
                   <CopyButton value={data.raw_input} label="Copy evidence" />
                 </div>
-                <div className="mono mt-4 max-h-[440px] overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-line bg-[#08080a] px-4 py-3.5 text-[11.5px] leading-relaxed text-ink-2">
+                <div className="mono mt-4 max-h-[440px] overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-line bg-surface px-4 py-3.5 text-[11.5px] leading-relaxed text-ink-2">
                   {data.source_type === 'message' && rawEntities.length ? (
                     <HighlightedText text={data.raw_input} entities={rawEntities} />
                   ) : (
@@ -500,7 +500,7 @@ export default function CaseDetail() {
                     <button
                       key={entity.id}
                       onClick={() => open({ id: entity.id, type: entity.type, value: entity.value })}
-                      className="group flex w-full items-center gap-3 px-5 py-2.5 text-left transition-colors hover:bg-white/[0.02]"
+                      className="group flex w-full items-center gap-3 px-5 py-2.5 text-left transition-colors hover:bg-[var(--fill-1)]"
                     >
                       <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: ENTITY_META[entity.type]?.color }} />
                       <span className="mono w-[72px] shrink-0 text-[8.5px] uppercase tracking-[0.08em] text-ink-3">
@@ -560,7 +560,7 @@ export default function CaseDetail() {
                 value={notesDraft}
                 onChange={(e) => setNotesDraft(e.target.value)}
                 placeholder="Record verification steps, callbacks, victim contact or escalation decisions…"
-                className="mt-4 h-[260px] w-full resize-none rounded-md border border-line bg-[#08080a] px-3 py-2.5 text-[12px] leading-relaxed text-ink-2 outline-none placeholder:text-ink-3 focus:border-accent/40"
+                className="mt-4 h-[260px] w-full resize-none rounded-md border border-line bg-surface px-3 py-2.5 text-[12px] leading-relaxed text-ink-2 outline-none placeholder:text-ink-3 focus:border-accent/40"
               />
               <div className="mt-3 flex items-center justify-between border-t border-line pt-3">
                 <span className="mono text-[9px] text-ink-3">
@@ -620,7 +620,7 @@ export default function CaseDetail() {
               value={notesDraft}
               onChange={(e) => setNotesDraft(e.target.value)}
               placeholder="Record verification steps, callbacks, victim contact or escalation decisions…"
-              className="mt-2 h-[132px] w-full resize-none rounded-md border border-line bg-[#08080a] px-2.5 py-2 text-[11.5px] leading-relaxed text-ink-2 outline-none placeholder:text-ink-3 focus:border-accent/40"
+              className="mt-2 h-[132px] w-full resize-none rounded-md border border-line bg-surface px-2.5 py-2 text-[11.5px] leading-relaxed text-ink-2 outline-none placeholder:text-ink-3 focus:border-accent/40"
             />
             <div className="mt-2 flex items-center justify-between">
               <span className="mono text-[8.5px] text-ink-3">{notesDraft.length} chars</span>

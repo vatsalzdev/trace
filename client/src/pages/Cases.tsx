@@ -16,7 +16,7 @@ const SOURCE_LABEL: Record<string, string> = { message: 'MSG', url: 'URL', apk: 
 const STATUS_STYLE: Record<string, string> = {
   open: 'border-accent/25 bg-accent/[0.06] text-accent',
   investigating: 'border-warn/25 bg-warn/[0.07] text-warn',
-  closed: 'border-line bg-white/[0.025] text-ink-3',
+  closed: 'border-line bg-[var(--fill-1)] text-ink-3',
 };
 
 export default function Cases() {
@@ -120,7 +120,7 @@ export default function Cases() {
                 onClick={() => setSource(id)}
                 className={cn(
                   'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[11px] transition-colors',
-                  source === id ? 'bg-accent/[0.08] text-ink' : 'text-ink-3 hover:bg-white/[0.025] hover:text-ink-2',
+                  source === id ? 'bg-accent/[0.08] text-ink' : 'text-ink-3 hover:bg-[var(--fill-1)] hover:text-ink-2',
                 )}
               >
                 <span className="flex-1 text-left">{label}</span>
@@ -144,7 +144,7 @@ export default function Cases() {
                   onClick={() => setStatus(id)}
                   className={cn(
                     'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[11px] transition-colors',
-                    status === id ? 'bg-white/[0.05] text-ink' : 'text-ink-3 hover:bg-white/[0.025] hover:text-ink-2',
+                    status === id ? 'bg-[var(--fill-5)] text-ink' : 'text-ink-3 hover:bg-[var(--fill-1)] hover:text-ink-2',
                   )}
                 >
                   <span className="flex-1 text-left">{label}</span>
@@ -234,7 +234,7 @@ export default function Cases() {
                 <Link
                   key={c.id}
                   to={`/app/cases/${c.id}`}
-                  className="group flex min-h-[168px] flex-col rounded-lg border border-line bg-bg-1/60 p-4 transition-colors hover:border-line-2 hover:bg-white/[0.02]"
+                  className="group flex min-h-[168px] flex-col rounded-lg border border-line bg-bg-1/60 p-4 transition-colors hover:border-line-2 hover:bg-[var(--fill-1)]"
                 >
                   <div className="flex items-center justify-between">
                     <span className="mono text-[9.5px] text-ink-3">{c.id}</span>

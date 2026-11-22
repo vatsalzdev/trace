@@ -9,14 +9,24 @@ import {
   Globe2,
   Info,
   LayoutDashboard,
+  Moon,
   PackageSearch,
   PanelLeftClose,
   PanelLeftOpen,
   ScanLine,
   Search,
+  Sun,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useMediaQuery } from '@/lib/hooks';
+import {
+  applyConsoleTheme,
+  clearConsoleTheme,
+  otherTheme,
+  persistTheme,
+  resolveTheme,
+  type Theme,
+} from '@/lib/theme';
 import { CommandPalette } from './CommandPalette';
 import { Kbd } from './ui';
 
@@ -48,7 +58,14 @@ function breadcrumb(pathname: string): { parent: string; current: string } {
 }
 
 export function Shell() {
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('trace:rail') === '1');
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('trace:rail') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const [theme, setTheme] = useState<Theme>(resolveTheme);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const isMobile = useMediaQuery('(max-width: 900px)');
   const location = useLocation();
@@ -57,8 +74,18 @@ export function Shell() {
   const crumb = breadcrumb(location.pathname);
 
   useEffect(() => {
-    localStorage.setItem('trace:rail', collapsed ? '1' : '0');
+    try {
+      localStorage.setItem('trace:rail', collapsed ? '1' : '0');
+    } catch {
+      /* rail state is cosmetic when storage is unavailable */
+    }
   }, [collapsed]);
+
+  useEffect(() => {
+    applyConsoleTheme(theme);
+    persistTheme(theme);
+    return clearConsoleTheme;
+  }, [theme]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
@@ -107,7 +134,7 @@ export function Shell() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="console min-h-screen bg-bg" data-theme={theme} data-testid="console-root">
       <aside
         className={cn(
           'fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-line bg-bg transition-[width] duration-200',
@@ -142,7 +169,7 @@ export function Shell() {
                 cn(
                   'group relative flex h-9 items-center gap-2.5 rounded-md text-[12.5px] transition-colors duration-150',
                   rail ? 'justify-center px-0' : 'px-2.5',
-                  isActive ? 'bg-bg-2 text-ink' : 'text-ink-3 hover:bg-white/[0.025] hover:text-ink-2',
+                  isActive ? 'bg-bg-2 text-ink' : 'text-ink-3 hover:bg-[var(--fill-1)] hover:text-ink-2',
                 )
               }
               title={rail ? item.label : undefined}
@@ -204,6 +231,15 @@ export function Shell() {
               <Kbd>⌘</Kbd>
               <Kbd>K</Kbd>
             </button>
+            <button
+              onClick={() => setTheme((value) => otherTheme(value))}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-bg-1 text-ink-2 transition-colors hover:border-line-2 hover:text-ink"
+              aria-label={`Switch to ${otherTheme(theme)} mode`}
+              title={`Switch to ${otherTheme(theme)} mode`}
+              data-testid="theme-toggle"
+            >
+              {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
             <div className="flex items-center gap-2 border-l border-line pl-3">
               <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-ok" />
               <span className="mono hidden text-[9.5px] uppercase tracking-[0.12em] text-ink-3 lg:block">System online</span>
@@ -233,7 +269,12 @@ export function Shell() {
         </main>
       </div>
 
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        theme={theme}
+        onToggleTheme={() => setTheme((value) => otherTheme(value))}
+      />
     </div>
   );
 }

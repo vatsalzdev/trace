@@ -1,0 +1,89 @@
+TRACE light console contrast audit
+Minimum AA body-text ratio: 4.5:1
+
+Supplied values that were darkened to reach AA:
+  --text-3: supplied #7a7a85 -> #686872
+  --accent: supplied #5b5bf0 -> #5252e0
+  --danger: supplied #d92d2d -> #c82828
+  --warn: supplied #b45309 -> #a34706
+  --ok: supplied #15803d -> #127235
+
+PASS 18.84:1  --text on --bg
+PASS 17.90:1  --text on --bg-1
+PASS 19.66:1  --text on --bg-2
+PASS 16.69:1  --text on --bg-3
+PASS 19.66:1  --text on --surface
+PASS 19.66:1  --text on --surface-focus
+PASS 17.90:1  --text on --raised
+PASS 18.84:1  --text on --graph-canvas
+PASS 19.66:1  --text on --overlay
+PASS 8.26:1  --text-2 on --bg
+PASS 7.85:1  --text-2 on --bg-1
+PASS 8.62:1  --text-2 on --bg-2
+PASS 7.31:1  --text-2 on --bg-3
+PASS 8.62:1  --text-2 on --surface
+PASS 8.62:1  --text-2 on --surface-focus
+PASS 7.85:1  --text-2 on --raised
+PASS 8.26:1  --text-2 on --graph-canvas
+PASS 8.62:1  --text-2 on --overlay
+PASS 5.28:1  --text-3 on --bg
+PASS 5.02:1  --text-3 on --bg-1
+PASS 5.51:1  --text-3 on --bg-2
+PASS 4.68:1  --text-3 on --bg-3
+PASS 5.51:1  --text-3 on --surface
+PASS 5.51:1  --text-3 on --surface-focus
+PASS 5.02:1  --text-3 on --raised
+PASS 5.28:1  --text-3 on --graph-canvas
+PASS 5.51:1  --text-3 on --overlay
+PASS 5.52:1  --accent on --bg
+PASS 5.25:1  --accent on --bg-1
+PASS 5.77:1  --accent on --bg-2
+PASS 4.89:1  --accent on --bg-3
+PASS 5.77:1  --accent on --surface
+PASS 5.77:1  --accent on --surface-focus
+PASS 5.25:1  --accent on --raised
+PASS 5.52:1  --accent on --graph-canvas
+PASS 5.77:1  --accent on --overlay
+PASS 5.31:1  --danger on --bg
+PASS 5.04:1  --danger on --bg-1
+PASS 5.54:1  --danger on --bg-2
+PASS 4.70:1  --danger on --bg-3
+PASS 5.54:1  --danger on --surface
+PASS 5.54:1  --danger on --surface-focus
+PASS 5.04:1  --danger on --raised
+PASS 5.31:1  --danger on --graph-canvas
+PASS 5.54:1  --danger on --overlay
+PASS 5.81:1  --warn on --bg
+PASS 5.52:1  --warn on --bg-1
+PASS 6.07:1  --warn on --bg-2
+PASS 5.15:1  --warn on --bg-3
+PASS 6.07:1  --warn on --surface
+PASS 6.07:1  --warn on --surface-focus
+PASS 5.52:1  --warn on --raised
+PASS 5.81:1  --warn on --graph-canvas
+PASS 6.07:1  --warn on --overlay
+PASS 5.77:1  --ok on --bg
+PASS 5.49:1  --ok on --bg-1
+PASS 6.03:1  --ok on --bg-2
+PASS 5.12:1  --ok on --bg-3
+PASS 6.03:1  --ok on --surface
+PASS 6.03:1  --ok on --surface-focus
+PASS 5.49:1  --ok on --raised
+PASS 5.77:1  --ok on --graph-canvas
+PASS 6.03:1  --ok on --overlay
+PASS 6.61:1  risk-high-fg on tinted bg-2
+PASS 5.62:1  risk-high-fg on tinted bg-3
+PASS 6.68:1  risk-medium-fg on tinted bg-2
+PASS 5.71:1  risk-medium-fg on tinted bg-3
+PASS 5.81:1  risk-low-fg on tinted bg-2
+PASS 4.97:1  risk-low-fg on tinted bg-3
+PASS 6.61:1  mark-url-fg on tinted bg-2
+PASS 6.68:1  mark-upi-fg on tinted bg-2
+PASS 6.50:1  mark-phone-fg on tinted bg-2
+PASS 6.84:1  mark-email-fg on tinted bg-2
+PASS 6.24:1  mark-account-fg on tinted bg-2
+PASS 6.45:1  btn-accent-fg on tinted bg-2
+PASS 19.66:1  btn-primary-fg on btn bg
+PASS 15.17:1  selection-text on tinted bg-2
+
+Checked 77 text/background pairs; 0 failed.

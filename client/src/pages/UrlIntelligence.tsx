@@ -212,7 +212,7 @@ export default function UrlIntelligence() {
             {['RDAP registration', 'DNS records', 'TLS certificate', 'Redirect chain'].map((item) => (
               <div key={item} className="rounded-md border border-line bg-bg-1 px-3 py-3">
                 <div className="mono text-[9px] uppercase tracking-[0.1em] text-ink-3">{item}</div>
-                <div className="mt-2 h-1 w-full overflow-hidden rounded bg-white/[0.05]">
+                <div className="mt-2 h-1 w-full overflow-hidden rounded bg-[var(--fill-5)]">
                   <div className="h-full w-1/3 animate-pulse rounded bg-accent/50" />
                 </div>
               </div>

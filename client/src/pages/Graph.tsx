@@ -68,7 +68,7 @@ const EntityNode = memo(({ data, selected }: NodeProps<GraphNodeData>) => {
   return (
     <div
       className={cn(
-        'group relative flex w-[156px] items-center gap-2 rounded-md border bg-bg-2 px-2.5 py-1.5 shadow-[0_8px_20px_-14px_rgba(0,0,0,0.9)] transition-colors',
+        'group relative flex w-[156px] items-center gap-2 rounded-md border bg-bg-2 px-2.5 py-1.5 shadow-[var(--shadow-panel)] transition-colors',
         selected ? 'border-accent/60 bg-accent/[0.07]' : 'border-line hover:border-line-2',
       )}
     >
@@ -89,8 +89,8 @@ const EntityNode = memo(({ data, selected }: NodeProps<GraphNodeData>) => {
 const CaseNode = memo(({ data, selected }: NodeProps<GraphNodeData>) => (
   <div
     className={cn(
-      'relative flex w-[136px] items-center gap-2 rounded-md border bg-[#101014] px-2.5 py-1.5 transition-colors',
-      selected ? 'border-ink/50' : 'border-line-2 hover:border-white/25',
+      'relative flex w-[136px] items-center gap-2 rounded-md border bg-raised px-2.5 py-1.5 transition-colors',
+      selected ? 'border-ink/50' : 'border-line-2 hover:border-[var(--line-2)]',
     )}
   >
     <Handle type="target" position={Position.Top} className="!h-1 !w-1 !border-0 !bg-transparent" />
@@ -178,7 +178,7 @@ function layout(graph: GraphData): { nodes: Node<GraphNodeData>[]; edges: Edge[]
     target: e.target,
     type: 'default',
     style: {
-      stroke: e.relation === 'evidence_in' ? 'rgba(255,255,255,0.075)' : 'rgba(139,139,255,0.17)',
+      stroke: e.relation === 'evidence_in' ? 'var(--graph-edge)' : 'var(--btn-accent-bg)',
       strokeWidth: e.relation === 'evidence_in' ? 0.7 : Math.min(2, 0.8 + e.weight * 0.2),
     },
   }));
@@ -270,7 +270,7 @@ function GraphInner() {
           style: {
             ...(e.style ?? {}),
             opacity: dim && !incident ? 0.15 : 1,
-            stroke: incident ? 'rgba(139,139,255,0.95)' : (e.style?.stroke as string | undefined),
+            stroke: incident ? 'var(--accent)' : (e.style?.stroke as string | undefined),
             strokeWidth: incident ? 2 : (e.style?.strokeWidth as number | undefined),
           },
         };
@@ -406,7 +406,7 @@ function GraphInner() {
                   className={cn(
                     'flex items-center gap-2 rounded border px-2 py-1.5 text-[10px] transition-colors lg:w-full',
                     visibleTypes.has(type)
-                      ? 'border-line-2 bg-white/[0.035] text-ink-2'
+                      ? 'border-line-2 bg-[var(--fill-2)] text-ink-2'
                       : 'border-line text-ink-3/50 hover:text-ink-3',
                   )}
                   title={`Toggle ${ENTITY_META[type as EntityType]?.label ?? type}`}
@@ -489,7 +489,7 @@ function GraphInner() {
               nodesConnectable={false}
               elementsSelectable
             >
-              <Background color="rgba(255,255,255,0.055)" gap={26} size={1} />
+              <Background color="var(--graph-grid)" gap={26} size={1} />
               <Controls showInteractive={false} position="bottom-left" />
               <MiniMap
                 position="bottom-right"
@@ -497,10 +497,12 @@ function GraphInner() {
                 zoomable
                 nodeColor={(node) => {
                   const data = node.data as GraphNodeData;
-                  return data.type === 'case' ? '#ededf0' : ENTITY_META[data.type as EntityType]?.color ?? '#5c5c66';
+                  return data.type === 'case'
+                    ? 'var(--text)'
+                    : ENTITY_META[data.type as EntityType]?.color ?? 'var(--text-3)';
                 }}
-                maskColor="rgba(5,5,6,0.72)"
-                style={{ background: '#0a0a0c', border: '1px solid rgba(255,255,255,0.07)' }}
+                maskColor="var(--graph-mask)"
+                style={{ background: 'var(--graph-canvas)', border: '1px solid var(--line)' }}
               />
             </ReactFlow>
           </div>
@@ -510,7 +512,7 @@ function GraphInner() {
               <span className="h-px w-5 bg-accent/40" /> co-occurrence
             </span>
             <span className="flex items-center gap-1.5 text-[9.5px] text-ink-3">
-              <span className="h-px w-5 bg-white/20" /> evidence in case
+              <span className="h-px w-5 bg-[var(--line-2)]" /> evidence in case
             </span>
             <span className="mono ml-auto text-[9px] text-ink-3">
               {visible.nodes.length === 0 ? 'no nodes match this filter' : 'click a node to inspect'}

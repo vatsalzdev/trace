@@ -134,7 +134,7 @@ export function ScoreBar({ score, segments = 24, height = 6 }: { score: number; 
           key={i}
           style={{
             height,
-            background: i < filled ? color : 'rgba(255,255,255,0.06)',
+            background: i < filled ? color : 'var(--fill-5)',
             opacity: i < filled ? 0.35 + (i / segments) * 0.65 : 1,
             transitionDelay: `${i * 12}ms`,
           }}

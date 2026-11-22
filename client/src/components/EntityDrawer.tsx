@@ -150,7 +150,7 @@ export function EntityDrawerProvider({ children }: { children: ReactNode }) {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute right-0 top-0 flex h-full w-full max-w-[430px] flex-col border-l border-line bg-bg-1 shadow-[-30px_0_80px_-30px_rgba(0,0,0,0.9)]"
+              className="absolute right-0 top-0 flex h-full w-full max-w-[430px] flex-col border-l border-line bg-bg-1 shadow-[var(--shadow-panel)]"
               role="dialog"
               aria-modal="true"
               aria-label="Entity details"

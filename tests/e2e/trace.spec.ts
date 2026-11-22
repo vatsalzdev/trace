@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { expect, test, type Page } from '@playwright/test';
 
+const THEME = process.env.TRACE_THEME === 'light' ? 'light' : 'dark';
 const ROOT = process.cwd();
 const SCREENSHOTS = join(ROOT, 'tests', 'screenshots');
 const ARTIFACTS = join(ROOT, 'tests', 'artifacts');
@@ -26,7 +27,7 @@ function watchConsole(page: Page, name: string): string[] {
 }
 
 async function shot(page: Page, name: string): Promise<string> {
-  const path = join(SCREENSHOTS, `${name}.png`);
+  const path = join(SCREENSHOTS, `${name}-${THEME}.png`);
   await page.screenshot({ path, fullPage: true });
   console.log(`[SCREENSHOT] ${name}: ${path}`);
   return path;
@@ -74,6 +75,19 @@ async function stopOfflineServer(server: OfflineServer): Promise<void> {
   writeFileSync(join(ARTIFACTS, 'e2e-offline-api.log'), server.log || '(no output)\n');
   if (server.child.exitCode === null) server.child.kill('SIGTERM');
 }
+
+// Phase 5 runs the whole suite once per theme. Theme-specific tests below
+// manage their own storage so they can verify first-visit behaviour.
+test.beforeEach(async ({ page }, testInfo) => {
+  if (/^1[3-5] /.test(testInfo.title)) return;
+  await page.addInitScript((value) => {
+    try {
+      localStorage.setItem('trace:theme', value);
+    } catch {
+      /* storage-blocked test covers this path */
+    }
+  }, THEME);
+});
 
 test('01 landing preloader, scroll and viewports', async ({ page }) => {
   const errors = watchConsole(page, 'landing');
@@ -463,5 +477,169 @@ test('12 reduced motion landing has no curtain or parallax', async ({ page }) =>
   });
   console.log(`[EVIDENCE] reduced motion: preloader=0, hiddenReveals=0, heroTransform=${transform}`);
   await shot(page, 'reduced-motion');
+  await noConsoleErrors(errors);
+});
+
+test('13 theme defaults dark, toggles, persists and stays console-only', async ({ page }) => {
+  const errors = watchConsole(page, 'theme-toggle');
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.goto('/app', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByTestId('console-root')).toBeVisible();
+
+  const state = () =>
+    page.evaluate(() => ({
+      html: document.documentElement.dataset.theme ?? 'none',
+      root: document.querySelector<HTMLElement>('[data-testid="console-root"]')?.dataset.theme ?? 'none',
+      bodyBg: getComputedStyle(document.body).backgroundColor,
+      stored: (() => {
+        try {
+          return localStorage.getItem('trace:theme');
+        } catch {
+          return 'blocked';
+        }
+      })(),
+    }));
+
+  const dark = await state();
+  assert.deepEqual(dark, { html: 'dark', root: 'dark', bodyBg: 'rgb(5, 5, 6)', stored: 'dark' });
+  console.log(`[EVIDENCE] theme default: ${JSON.stringify(dark)}`);
+  await shot(page, 'theme-default-dark');
+
+  const html = await (await page.request.get('/app')).text();
+  const bootstrapAt = html.indexOf('document.documentElement.dataset.theme');
+  // Vite adds a cache-busting query to the dev module URL, so match the path
+  // and ignore build/dev URL differences.
+  const moduleAt = html.search(/<script[^>]*src="\/src\/main\.tsx(?:\?[^"]*)?"/);
+  const stylesheetAt = html.indexOf('rel="stylesheet"');
+  assert.ok(bootstrapAt > -1 && moduleAt > -1 && bootstrapAt < moduleAt, 'theme bootstrap is not before the app module');
+  if (stylesheetAt >= 0) assert.ok(bootstrapAt < stylesheetAt, 'theme bootstrap is not before the stylesheet');
+  console.log(`[EVIDENCE] no-flash bootstrap order: script=${bootstrapAt}, module=${moduleAt}, stylesheet=${stylesheetAt}`);
+
+  await page.getByTestId('theme-toggle').click();
+  await expect.poll(async () => (await state()).html, { timeout: 5000 }).toBe('light');
+  const light = await state();
+  assert.deepEqual(light, { html: 'light', root: 'light', bodyBg: 'rgb(250, 250, 250)', stored: 'light' });
+  console.log(`[EVIDENCE] theme after toggle: ${JSON.stringify(light)}`);
+  await shot(page, 'theme-light-console');
+
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.getByTestId('console-root')).toBeVisible();
+  assert.equal((await state()).html, 'light', 'light theme did not survive reload');
+
+  await page.keyboard.press('Control+k');
+  await expect(page.getByPlaceholder('Search cases, indicators, pages…')).toBeVisible();
+  await page.getByPlaceholder('Search cases, indicators, pages…').fill('Switch to dark mode');
+  await page.getByText('Switch to dark mode', { exact: true }).click();
+  await expect.poll(async () => (await state()).html, { timeout: 5000 }).toBe('dark');
+  console.log('[EVIDENCE] palette theme action switched light -> dark');
+
+  await page.getByTestId('theme-toggle').click();
+  await expect.poll(async () => (await state()).html, { timeout: 5000 }).toBe('light');
+  await page.getByRole('link', { name: /TRACE v1\.0/ }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect.poll(() => page.evaluate(() => document.documentElement.hasAttribute('data-theme')), { timeout: 5000 }).toBe(false);
+  const landingBg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  assert.equal(landingBg, 'rgb(5, 5, 6)', `landing inherited light theme: ${landingBg}`);
+  console.log(`[EVIDENCE] landing after console light: themeAttr=false, bodyBg=${landingBg}`);
+  await shot(page, 'theme-landing-stays-dark');
+  await noConsoleErrors(errors);
+});
+
+test('14 first-visit system preference is locked and blocked storage is safe', async ({ page }) => {
+  const errors = watchConsole(page, 'theme-system');
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/app', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByTestId('console-root')).toBeVisible();
+  const first = await page.evaluate(() => ({
+    theme: document.documentElement.dataset.theme,
+    stored: localStorage.getItem('trace:theme'),
+  }));
+  assert.deepEqual(first, { theme: 'light', stored: 'light' });
+
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.getByTestId('console-root')).toBeVisible();
+  const locked = await page.evaluate(() => document.documentElement.dataset.theme);
+  assert.equal(locked, 'light', 'system preference changed a stored theme');
+  console.log(`[EVIDENCE] first visit=${JSON.stringify(first)}, after OS change=${locked}`);
+  await noConsoleErrors(errors);
+
+  const browser = page.context().browser();
+  assert.ok(browser, 'Playwright browser is unavailable');
+  const blockedContext = await browser.newContext({ colorScheme: 'dark' });
+  const blocked = await blockedContext.newPage();
+  const blockedErrors = watchConsole(blocked, 'theme-blocked-storage');
+  await blocked.addInitScript(() => {
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      get() {
+        throw new Error('storage blocked for QA');
+      },
+    });
+  });
+  await blocked.goto('/app', { waitUntil: 'domcontentloaded' });
+  await expect(blocked.getByTestId('console-root')).toBeVisible();
+  const blockedTheme = await blocked.evaluate(() => document.documentElement.dataset.theme);
+  assert.equal(blockedTheme, 'dark');
+  console.log('[EVIDENCE] blocked localStorage rendered console with dark fallback');
+  await shot(blocked, 'theme-blocked-storage');
+  await noConsoleErrors(blockedErrors);
+  await blockedContext.close();
+});
+
+test('15 PDF report output is unchanged by console theme', async ({ page }) => {
+  const errors = watchConsole(page, 'theme-pdf');
+  // This test owns its storage (it toggles themes), so start from a known
+  // dark state instead of inheriting the browser's first-visit preference.
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem('trace:theme', 'dark');
+    } catch {
+      /* storage-blocked path is covered in test 14 */
+    }
+  });
+  const raw = `QA THEME PDF ${Date.now()} URGENT SBI KYC http://sbi-kyc-verify.in kyc.support@fakebank`;
+  const created = await page.request.post('/api/analyze/message', { data: { text: raw, save: true, title: 'QA Theme PDF Case' } });
+  assert.ok(created.ok(), `case create failed: ${created.status()}`);
+  const caseId = (await created.json()).caseId as string;
+
+  await page.goto(`/app/cases/${caseId}`, { waitUntil: 'domcontentloaded' });
+  await expect(page.getByText('QA Theme PDF Case')).toBeVisible({ timeout: 10_000 });
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark', 'first PDF was not generated in dark mode');
+
+  const { PDFParse } = await import('pdf-parse');
+  const { readFileSync } = await import('node:fs');
+  const extract = async (name: string) => {
+    const downloadPromise = page.waitForEvent('download', { timeout: 20_000 });
+    await page.getByRole('button', { name: 'Report PDF', exact: true }).click();
+    const download = await downloadPromise;
+    const path = join(ARTIFACTS, `${name}.pdf`);
+    await download.saveAs(path);
+    const parser = new PDFParse({ data: new Uint8Array(readFileSync(path)) });
+    const parsed = await parser.getText();
+    await parser.destroy();
+    return parsed.text;
+  };
+  const normalize = (text: string) =>
+    text
+      .replace(/Generated .*? IST/gi, 'Generated <stamp> IST')
+      .replace(/\w+, \d{1,2} \w+ \d{4} at \d{1,2}:\d{1,2}:\d+ [ap]m IST/g, '<timestamp>')
+      .replace(/\d{1,2} [A-Za-z]{3}, \d{2}:\d{2}/g, '<short-timestamp>')
+      // Downloading a report adds a timeline event, so the second PDF has one
+      // more volatile row than the first. Strip those rows from both texts.
+      .replace(/<short-timestamp> report Report RPT-[A-Z0-9-]+ generated/g, '')
+      .replace(/RPT-[A-Z0-9-]+/g, '<report-id>')
+      .replace(/SHA-256\s+[a-f0-9]{64}/gi, 'SHA-256 <hash>')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const darkPdf = normalize(await extract('theme-pdf-dark'));
+  assert.ok(darkPdf.includes('QA THEME PDF'), 'dark-theme PDF missing marker');
+  await page.getByTestId('theme-toggle').click();
+  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme), { timeout: 5000 }).toBe('light');
+  const lightPdf = normalize(await extract('theme-pdf-light'));
+  assert.equal(lightPdf, darkPdf, 'console theme changed the PDF text content');
+  console.log(`[EVIDENCE] PDF text identical across themes after variable fields (${darkPdf.length} chars)`);
+  await shot(page, 'theme-pdf-light');
   await noConsoleErrors(errors);
 });

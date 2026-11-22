@@ -201,7 +201,7 @@ export default function ApkInspector() {
                 </span>
                 <span className="mono text-[9.5px] text-ink-3">{progress}%</span>
               </div>
-              <div className="mt-2 h-1 overflow-hidden rounded bg-white/[0.06]">
+              <div className="mt-2 h-1 overflow-hidden rounded bg-[var(--fill-5)]">
                 <div
                   className="h-full rounded bg-accent transition-[width] duration-300 ease-expo"
                   style={{ width: `${progress}%` }}

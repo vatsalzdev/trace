@@ -265,7 +265,7 @@ export default function MessageScanner() {
                       <button
                         key={`${u.span.start}-${u.span.value}`}
                         onClick={() => navigate(`/app/url?u=${encodeURIComponent(u.span.value)}`)}
-                        className="group flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-white/[0.02]"
+                        className="group flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-[var(--fill-1)]"
                       >
                         <span className={riskClass(u.analysis.riskLabel)}>{u.analysis.riskLabel}</span>
                         <div className="min-w-0 flex-1">
@@ -454,7 +454,7 @@ export default function MessageScanner() {
                   <span
                     className={cn(
                       'h-1.5 w-1.5 shrink-0 rounded-full',
-                      rule.triggered ? 'bg-danger' : 'bg-white/10',
+                      rule.triggered ? 'bg-danger' : 'bg-[var(--fill-5)]',
                     )}
                   />
                   <span className={cn('min-w-0 flex-1 truncate text-[11px]', rule.triggered ? 'text-ink-2' : 'text-ink-3/70')}>
