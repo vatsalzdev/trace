@@ -13,9 +13,13 @@
     "seed": "npm run seed -w server",
     "sample:apk": "npm run sample:apk -w server",
     "preview": "npm run preview -w client",
-    "start": "npm run start -w server"
+    "start": "npm run start -w server",
+    "test:api": "node --test tests/api.test.mjs",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "@playwright/test": "^1.65.1",
+    "concurrently": "^9.1.2",
+    "pdf-parse": "^2.4.5"
   }
 }

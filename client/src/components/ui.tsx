@@ -75,7 +75,7 @@ export function Card({ children, className, spotlight = false }: { children: Rea
 
 export function RiskPill({ label, score }: { label?: string; score?: number }) {
   return (
-    <span className={riskClass(label)}>
+    <span className={riskClass(label)} data-testid="risk-pill">
       <span
         className="inline-block h-1 w-1 rounded-full"
         style={{ background: riskColor(label) }}
@@ -191,6 +191,8 @@ export function RuleTable({ rules, emptyText = 'No rules triggered.' }: { rules:
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.24), ease: [0.16, 1, 0.3, 1] }}
               className="group py-3"
+              data-testid="rule-row"
+              data-rule-id={rule.id}
             >
               <div className="flex items-start gap-2.5">
                 <span

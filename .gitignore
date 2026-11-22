@@ -8,5 +8,8 @@ server/data/*.db-*
 playwright-report/
 test-results/
 coverage/
+tests/artifacts/playwright/
+tests/artifacts/playwright-report/
+tests/artifacts/offline-db-*/
 *.log
 .DS_Store

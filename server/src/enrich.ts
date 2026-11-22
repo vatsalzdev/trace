@@ -1,12 +1,41 @@
 import { promises as dns } from 'node:dns';
+import net from 'node:net';
 import tls from 'node:tls';
 import type { DnsInfo, Enrichment, RedirectHop, RegistrationInfo, TlsInfo, UrlAnalysis, UrlHeuristic } from '../../shared/types';
 import { analyzeUrl, riskFromScore } from '../../shared/url';
 import { dnsFixture, redirectFixture, registrationFixture, tlsFixture } from './fixtures';
 
 const TIMEOUT = 4000;
+const FORCE_OFFLINE = process.env.TRACE_FORCE_OFFLINE === '1';
+const LOOKUP_HOST = process.env.TRACE_LOOKUP_HOST?.trim() ?? '';
 const cache = new Map<string, { value: Enrichment; at: number }>();
 const CACHE_TTL = 10 * 60 * 1000;
+
+/**
+ * QA hook: exercise the real four-second lookup budget against an unroutable
+ * target. The socket is allowed to fail early, but resolution is deliberately
+ * held for the configured budget so the timeout path is observable.
+ */
+function forcedLookupBudget(host: string): Promise<void> {
+  return new Promise((resolve) => {
+    let timer: ReturnType<typeof setTimeout>;
+    const socket = net.connect({ host, port: 443 });
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      socket.destroy();
+      resolve();
+    };
+    timer = setTimeout(finish, TIMEOUT);
+    socket.setTimeout(TIMEOUT, finish);
+    socket.once('connect', finish);
+    socket.once('error', () => {
+      /* Wait for the configured budget so the timeout is deterministic. */
+    });
+  });
+}
 
 function timeout<T>(promise: Promise<T>, ms = TIMEOUT): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -50,7 +79,11 @@ async function fetchJson(url: string): Promise<{ data: unknown; status: number }
 }
 
 async function rdap(domain: string): Promise<RegistrationInfo | null> {
-  if (isReserved(domain)) return null;
+  if (FORCE_OFFLINE || isReserved(domain)) return null;
+  if (LOOKUP_HOST) {
+    await forcedLookupBudget(LOOKUP_HOST);
+    return null;
+  }
   try {
     const { data } = await fetchJson(`https://rdap.org/domain/${encodeURIComponent(domain)}`);
     const d = data as Record<string, any>;
@@ -81,6 +114,7 @@ async function rdap(domain: string): Promise<RegistrationInfo | null> {
 }
 
 async function resolveDns(domain: string): Promise<DnsInfo | null> {
+  if (FORCE_OFFLINE) return null;
   try {
     const [a, mx, ns] = await Promise.allSettled([
       timeout(dns.resolve4(domain), 3000),
@@ -98,6 +132,11 @@ async function resolveDns(domain: string): Promise<DnsInfo | null> {
 }
 
 async function tlsCert(host: string): Promise<TlsInfo | null> {
+  if (FORCE_OFFLINE) return null;
+  if (LOOKUP_HOST) {
+    await forcedLookupBudget(LOOKUP_HOST);
+    return null;
+  }
   if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return null;
   return new Promise((resolve) => {
     let settled = false;
@@ -130,6 +169,7 @@ async function tlsCert(host: string): Promise<TlsInfo | null> {
 }
 
 async function followRedirects(start: string): Promise<{ hops: RedirectHop[]; live: boolean }> {
+  if (FORCE_OFFLINE) return { hops: [], live: false };
   const hops: RedirectHop[] = [];
   let current = start;
   const controller = new AbortController();
@@ -216,8 +256,9 @@ export async function enrichUrl(input: string): Promise<UrlAnalysis & { enrichme
     registration: rdapResult ?? registrationFixture(domain),
     dns: dnsResult ?? dnsFixture(domain),
     tls: tlsResult ?? tlsFixture(analysis.breakdown.host),
-    note:
-      mode === 'live'
+    note: FORCE_OFFLINE
+      ? 'TRACE_FORCE_OFFLINE=1 — no outbound lookups attempted; deterministic local fixtures used.'
+      : mode === 'live'
         ? `Resolved live: ${liveCount}/4 network sources responded within ${TIMEOUT / 1000}s.`
         : 'Network unavailable or lookup blocked — deterministic local fixtures used. Analysis remains complete.',
   };

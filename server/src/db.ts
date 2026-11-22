@@ -1,13 +1,13 @@
 import Database from 'better-sqlite3';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { CaseRecord, EntityRecord, EntityType, EventRecord, ReportPayload } from '../../shared/types';
 import { normalizeEntity } from '../../shared/message';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const dataDir = join(here, '..', 'data');
+const dataDir = process.env.TRACE_DB_DIR ? resolve(process.env.TRACE_DB_DIR) : join(here, '..', 'data');
 if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
 export const DB_PATH = join(dataDir, 'trace.db');
 

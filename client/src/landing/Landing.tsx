@@ -314,7 +314,7 @@ export default function Landing() {
           </div>
         </div>
 
-        <h1 className="display mt-10 max-w-[1020px] text-[clamp(48px,8vw,118px)] text-ink">
+        <h1 className="display mt-10 max-w-[1020px] text-[clamp(48px,8vw,118px)] text-ink" data-testid="hero-headline">
           <span className="reveal-line">
             <span style={revealed ? { animation: 'lineUp 900ms var(--ease) 60ms both' } : { transform: 'translateY(110%)' }}>
               Every fraud leaves

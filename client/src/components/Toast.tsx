@@ -39,6 +39,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               exit={{ opacity: 0, y: -4, transition: { duration: 0.15 } }}
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               className="glass flex items-start gap-2.5 rounded-lg px-3.5 py-3 text-[12.5px] text-ink"
+              data-testid="toast"
             >
               <span className="mt-0.5 shrink-0">
                 {item.kind === 'success' ? (

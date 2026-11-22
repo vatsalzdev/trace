@@ -323,7 +323,7 @@ export default function ApkInspector() {
               </div>
               <div className="divide-y divide-line/70">
                 {analysis.permissions.map((permission) => (
-                  <div key={permission.name} className="flex items-start gap-3 px-5 py-2.5">
+                  <div key={permission.name} className="flex items-start gap-3 px-5 py-2.5" data-testid="permission-row">
                     <span
                       className={cn(
                         'mono mt-0.5 w-[112px] shrink-0 truncate text-[9.5px] uppercase tracking-[0.06em]',

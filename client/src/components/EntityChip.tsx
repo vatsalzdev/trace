@@ -47,6 +47,8 @@ export function EntityChip({
         open({ id: entityId, type: type as EntityType, value });
       }}
       className={cn('entity-chip group', suspicious && 'border-warn/30', className)}
+      data-testid="entity-chip"
+      data-entity-value={value}
       title={note ? `${meta.label} · ${note}` : `${meta.label} — open entity drawer`}
     >
       <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: meta.color }} />

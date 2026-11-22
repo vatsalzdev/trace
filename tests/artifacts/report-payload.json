@@ -1,0 +1,967 @@
+{
+  "reportId": "RPT-2026-0019-MWRIYIKP",
+  "case": {
+    "id": "TRC-2026-0019",
+    "title": "QA report case",
+    "status": "open",
+    "risk_label": "HIGH",
+    "risk_score": 95,
+    "source_type": "message",
+    "raw_input": "URGENT! SBI KYC http://sbi-kyc-verify.in pay kyc.support@fakebank",
+    "created_at": "2026-11-22T07:37:55.031Z",
+    "updated_at": "2026-11-22T07:37:55.031Z",
+    "notes": "",
+    "entity_count": 3,
+    "entities": [
+      {
+        "id": 2,
+        "type": "domain",
+        "value": "sbi-kyc-verify.in",
+        "first_seen": "2026-10-09T10:00:00.000Z",
+        "last_seen": "2026-11-22T07:37:55.031Z",
+        "risk_score": 100,
+        "metadata_json": "{\"cases\":[\"TRC-2026-0001\",\"TRC-2026-0002\",\"TRC-2026-0003\",\"TRC-2026-0007\",\"TRC-2026-0011\",\"TRC-2026-0015\",\"TRC-2026-0016\",\"TRC-2026-0017\",\"TRC-2026-0018\",\"TRC-2026-0019\"],\"suspicious\":false,\"note\":\"classes.dex\"}"
+      },
+      {
+        "id": 3,
+        "type": "upi",
+        "value": "kyc.support@fakebank",
+        "first_seen": "2026-10-09T10:00:00.000Z",
+        "last_seen": "2026-11-22T07:37:55.031Z",
+        "risk_score": 100,
+        "metadata_json": "{\"cases\":[\"TRC-2026-0001\",\"TRC-2026-0002\",\"TRC-2026-0003\",\"TRC-2026-0007\",\"TRC-2026-0011\",\"TRC-2026-0015\",\"TRC-2026-0017\",\"TRC-2026-0018\",\"TRC-2026-0019\"],\"suspicious\":true,\"note\":\"unregistered handle @fakebank\"}"
+      },
+      {
+        "id": 39,
+        "type": "url",
+        "value": "http://sbi-kyc-verify.in",
+        "first_seen": "2026-11-22T07:37:55.031Z",
+        "last_seen": "2026-11-22T07:37:55.031Z",
+        "risk_score": 95,
+        "metadata_json": "{\"cases\":[\"TRC-2026-0019\"],\"suspicious\":false,\"note\":null}"
+      }
+    ],
+    "analyses": [
+      {
+        "id": 19,
+        "kind": "message",
+        "input": "URGENT! SBI KYC http://sbi-kyc-verify.in pay kyc.support@fakebank",
+        "result_json": {
+          "input": "URGENT! SBI KYC http://sbi-kyc-verify.in pay kyc.support@fakebank",
+          "score": 95,
+          "riskLabel": "HIGH",
+          "rules": [
+            {
+              "id": "urgency",
+              "name": "Urgency language",
+              "weight": 15,
+              "triggered": true,
+              "evidence": [
+                "\"URGENT\""
+              ],
+              "explanation": "Time pressure suppresses deliberation. These phrases demand action before the recipient can verify the claim.",
+              "category": "coercion"
+            },
+            {
+              "id": "brand",
+              "name": "Financial / government impersonation",
+              "weight": 25,
+              "triggered": true,
+              "evidence": [
+                "brand \"SBI\" invoked via \"sbi\"",
+                "link does not belong to SBI: sbi-kyc-verify.in (official: sbi.co.in)"
+              ],
+              "explanation": "A regulated brand is named while the message links to a domain the brand does not own. A brand name alone is not evidence; the mismatch is.",
+              "category": "identity"
+            },
+            {
+              "id": "domain",
+              "name": "Suspicious domain structure",
+              "weight": 25,
+              "triggered": true,
+              "evidence": [
+                "sbi-kyc-verify.in scores 80/100",
+                "Brand used outside its official domain: \"sbi\" appears in sbi-kyc-verify.in/",
+                "Hyphen-stacked hostname: 2 hyphens in \"sbi-kyc-verify.in\"",
+                "Unencrypted HTTP transport: http://sbi-kyc-verify.in",
+                "Typosquat / brand-combination domain: registrable label \"sbi-kyc-verify\" imitates \"sbi\""
+              ],
+              "explanation": "The linked domain independently fails structural checks in the URL engine (brand mismatch, TLD, typosquat or obfuscation).",
+              "category": "identity"
+            },
+            {
+              "id": "http",
+              "name": "Insecure HTTP link",
+              "weight": 10,
+              "triggered": true,
+              "evidence": [
+                "http://sbi-kyc-verify.in uses http://"
+              ],
+              "explanation": "Any credential or payment page served over plain HTTP is unsafe regardless of how it looks.",
+              "category": "transport"
+            },
+            {
+              "id": "payment",
+              "name": "Payment request / identifier",
+              "weight": 10,
+              "triggered": true,
+              "evidence": [
+                "UPI kyc.support@fakebank (unregistered handle)",
+                "payment language \"pay\""
+              ],
+              "explanation": "The message routes the recipient toward a payment instrument — a UPI ID, wallet or bank account.",
+              "category": "financial"
+            },
+            {
+              "id": "credential",
+              "name": "Credential / OTP harvesting",
+              "weight": 15,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "The message asks for an OTP, PIN, CVV or identity document, or pairs a document name with an action verb.",
+              "category": "credential"
+            },
+            {
+              "id": "shortener",
+              "name": "URL shortener obfuscation",
+              "weight": 10,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "A shortener prevents the recipient from seeing the destination before clicking.",
+              "category": "transport"
+            },
+            {
+              "id": "kyc",
+              "name": "KYC / verification lure",
+              "weight": 10,
+              "triggered": true,
+              "evidence": [
+                "\"KYC\"",
+                "\"kyc\"",
+                "\"verify\""
+              ],
+              "explanation": "KYC and re-verification are the most common pretexts for Indian banking fraud.",
+              "category": "pretext"
+            },
+            {
+              "id": "authority",
+              "name": "Authority / threat pressure",
+              "weight": 10,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Threats of arrest, FIR or legal action create fear that short-circuits verification.",
+              "category": "coercion"
+            },
+            {
+              "id": "prize",
+              "name": "Reward / lottery lure",
+              "weight": 10,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Unexpected winnings, refunds or cashback are used to pull the recipient into a payment flow.",
+              "category": "pretext"
+            },
+            {
+              "id": "apk",
+              "name": "APK / app install request",
+              "weight": 15,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "A link to an Android package installs code outside the Play Store, where banking trojans are distributed.",
+              "category": "malware"
+            }
+          ],
+          "entities": [
+            {
+              "value": "http://sbi-kyc-verify.in",
+              "start": 16,
+              "end": 40,
+              "type": "url",
+              "normalized": "http://sbi-kyc-verify.in"
+            },
+            {
+              "value": "sbi-kyc-verify.in",
+              "start": 23,
+              "end": 40,
+              "type": "domain",
+              "normalized": "sbi-kyc-verify.in"
+            },
+            {
+              "value": "kyc.support@fakebank",
+              "start": 45,
+              "end": 65,
+              "type": "upi",
+              "normalized": "kyc.support@fakebank",
+              "suspicious": true,
+              "note": "unregistered handle @fakebank"
+            }
+          ],
+          "keywords": [
+            {
+              "category": "Urgency",
+              "matches": [
+                "URGENT"
+              ]
+            },
+            {
+              "category": "KYC",
+              "matches": [
+                "KYC",
+                "kyc",
+                "verify"
+              ]
+            },
+            {
+              "category": "Payment",
+              "matches": [
+                "pay"
+              ]
+            }
+          ],
+          "urls": [
+            {
+              "span": {
+                "value": "http://sbi-kyc-verify.in",
+                "start": 16,
+                "end": 40
+              },
+              "analysis": {
+                "input": "http://sbi-kyc-verify.in",
+                "normalized": "http://sbi-kyc-verify.in/",
+                "score": 80,
+                "riskLabel": "HIGH",
+                "heuristics": [
+                  {
+                    "id": "subdomain-depth",
+                    "name": "Deep subdomain nesting",
+                    "weight": 10,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Four or more subdomain levels are commonly used to bury a recognisable brand deep inside a long host.",
+                    "category": "structure"
+                  },
+                  {
+                    "id": "brand-impersonation",
+                    "name": "Brand used outside its official domain",
+                    "weight": 30,
+                    "triggered": true,
+                    "evidence": [
+                      "\"sbi\" appears in sbi-kyc-verify.in/",
+                      "official domains: sbi.co.in, onlinesbi.sbi, sbiyono.sbi, sbi, sbicard.com"
+                    ],
+                    "explanation": "A protected brand appears in the host or path, but the registrable domain is not owned by that brand.",
+                    "category": "identity"
+                  },
+                  {
+                    "id": "hyphens",
+                    "name": "Hyphen-stacked hostname",
+                    "weight": 10,
+                    "triggered": true,
+                    "evidence": [
+                      "2 hyphens in \"sbi-kyc-verify.in\""
+                    ],
+                    "explanation": "Scam domains chain descriptive words with hyphens to look official (e.g. secure-login-verify).",
+                    "category": "structure"
+                  },
+                  {
+                    "id": "digits-in-domain",
+                    "name": "Numeric padding in hostname",
+                    "weight": 8,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Digits in the registrable label are often used to mint look-alike domains at scale.",
+                    "category": "structure"
+                  },
+                  {
+                    "id": "punycode",
+                    "name": "Punycode or homoglyph hostname",
+                    "weight": 25,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Internationalised or punycode characters can render as a different Latin brand name (homoglyph attack).",
+                    "category": "identity"
+                  },
+                  {
+                    "id": "suspicious-tld",
+                    "name": "High-abuse TLD",
+                    "weight": 15,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "This top-level domain is cheap, lightly policed and over-represented in phishing campaigns.",
+                    "category": "structure"
+                  },
+                  {
+                    "id": "ip-host",
+                    "name": "Raw IP address instead of a domain",
+                    "weight": 25,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Legitimate consumer services rarely publish links to a bare IP address.",
+                    "category": "infrastructure"
+                  },
+                  {
+                    "id": "port",
+                    "name": "Non-standard network port",
+                    "weight": 10,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Ports other than 80/443 bypass common URL filters and are unusual for public services.",
+                    "category": "infrastructure"
+                  },
+                  {
+                    "id": "http",
+                    "name": "Unencrypted HTTP transport",
+                    "weight": 10,
+                    "triggered": true,
+                    "evidence": [
+                      "http://sbi-kyc-verify.in"
+                    ],
+                    "explanation": "Credentials submitted over plain HTTP can be read or modified in transit.",
+                    "category": "transport"
+                  },
+                  {
+                    "id": "at-sign",
+                    "name": "Userinfo obfuscation (@ in URL)",
+                    "weight": 20,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Everything before @ is userinfo; browsers ignore it, so the real destination hides after the @.",
+                    "category": "identity"
+                  },
+                  {
+                    "id": "length",
+                    "name": "Unusually long URL",
+                    "weight": 5,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Long URLs push the real destination out of view in mobile address bars and chat previews.",
+                    "category": "structure"
+                  },
+                  {
+                    "id": "suspicious-path",
+                    "name": "Credential-harvesting path words",
+                    "weight": 10,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Paths named for login, KYC or refund flows indicate a credential or payment capture page.",
+                    "category": "intent"
+                  },
+                  {
+                    "id": "shortener",
+                    "name": "URL shortener",
+                    "weight": 10,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Shorteners hide the final destination until the link is opened.",
+                    "category": "transport"
+                  },
+                  {
+                    "id": "entropy",
+                    "name": "High-entropy domain label",
+                    "weight": 10,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Randomly generated labels indicate automated phishing-domain registration.",
+                    "category": "structure"
+                  },
+                  {
+                    "id": "typosquat",
+                    "name": "Typosquat / brand-combination domain",
+                    "weight": 30,
+                    "triggered": true,
+                    "evidence": [
+                      "registrable label \"sbi-kyc-verify\" imitates \"sbi\"",
+                      "edit distance to \"sbi\": 11",
+                      "legitimate domain: sbi.co.in"
+                    ],
+                    "explanation": "The registrable domain is a look-alike of SBI; the brand does not own it.",
+                    "category": "identity"
+                  }
+                ],
+                "breakdown": {
+                  "protocol": "http",
+                  "host": "sbi-kyc-verify.in",
+                  "subdomain": "",
+                  "domain": "sbi-kyc-verify",
+                  "tld": "in",
+                  "port": "",
+                  "path": "",
+                  "query": ""
+                },
+                "registrableDomain": "sbi-kyc-verify.in",
+                "brandMatch": "SBI",
+                "isShortener": false,
+                "isIp": false
+              }
+            }
+          ],
+          "summary": "This message is a high-risk artefact. It triggers 6 of 11 rules for a combined weight of 95 (capped at 100). The strongest signals are financial / government impersonation (25), suspicious domain structure (25), urgency language (15). It invokes SBI while directing the recipient to sbi-kyc-verify.in, which is not an official SBI domain (sbi.co.in). Payment is redirected to kyc.support@fakebank, which uses an unregistered UPI handle — no regulated PSP issues it. Do not open the link. Preserve the message and report it to 1930 (national cybercrime helpline)."
+        },
+        "created_at": "2026-11-22T07:37:55.031Z"
+      }
+    ],
+    "events": [
+      {
+        "id": 45,
+        "case_id": "TRC-2026-0019",
+        "type": "entities",
+        "message": "3 indicators linked (1 new)",
+        "created_at": "2026-11-22T07:37:55.031Z"
+      },
+      {
+        "id": 44,
+        "case_id": "TRC-2026-0019",
+        "type": "created",
+        "message": "Case opened from message analysis",
+        "created_at": "2026-11-22T07:37:55.031Z"
+      }
+    ]
+  },
+  "generatedAt": "2026-11-22T07:37:55.041Z",
+  "generatedAtIst": "Sunday, 22 November 2026 at 1:07:55 pm IST",
+  "analyst": "QA Analyst",
+  "analysis": {
+    "input": "URGENT! SBI KYC http://sbi-kyc-verify.in pay kyc.support@fakebank",
+    "score": 95,
+    "riskLabel": "HIGH",
+    "rules": [
+      {
+        "id": "urgency",
+        "name": "Urgency language",
+        "weight": 15,
+        "triggered": true,
+        "evidence": [
+          "\"URGENT\""
+        ],
+        "explanation": "Time pressure suppresses deliberation. These phrases demand action before the recipient can verify the claim.",
+        "category": "coercion"
+      },
+      {
+        "id": "brand",
+        "name": "Financial / government impersonation",
+        "weight": 25,
+        "triggered": true,
+        "evidence": [
+          "brand \"SBI\" invoked via \"sbi\"",
+          "link does not belong to SBI: sbi-kyc-verify.in (official: sbi.co.in)"
+        ],
+        "explanation": "A regulated brand is named while the message links to a domain the brand does not own. A brand name alone is not evidence; the mismatch is.",
+        "category": "identity"
+      },
+      {
+        "id": "domain",
+        "name": "Suspicious domain structure",
+        "weight": 25,
+        "triggered": true,
+        "evidence": [
+          "sbi-kyc-verify.in scores 80/100",
+          "Brand used outside its official domain: \"sbi\" appears in sbi-kyc-verify.in/",
+          "Hyphen-stacked hostname: 2 hyphens in \"sbi-kyc-verify.in\"",
+          "Unencrypted HTTP transport: http://sbi-kyc-verify.in",
+          "Typosquat / brand-combination domain: registrable label \"sbi-kyc-verify\" imitates \"sbi\""
+        ],
+        "explanation": "The linked domain independently fails structural checks in the URL engine (brand mismatch, TLD, typosquat or obfuscation).",
+        "category": "identity"
+      },
+      {
+        "id": "http",
+        "name": "Insecure HTTP link",
+        "weight": 10,
+        "triggered": true,
+        "evidence": [
+          "http://sbi-kyc-verify.in uses http://"
+        ],
+        "explanation": "Any credential or payment page served over plain HTTP is unsafe regardless of how it looks.",
+        "category": "transport"
+      },
+      {
+        "id": "payment",
+        "name": "Payment request / identifier",
+        "weight": 10,
+        "triggered": true,
+        "evidence": [
+          "UPI kyc.support@fakebank (unregistered handle)",
+          "payment language \"pay\""
+        ],
+        "explanation": "The message routes the recipient toward a payment instrument — a UPI ID, wallet or bank account.",
+        "category": "financial"
+      },
+      {
+        "id": "credential",
+        "name": "Credential / OTP harvesting",
+        "weight": 15,
+        "triggered": false,
+        "evidence": [],
+        "explanation": "The message asks for an OTP, PIN, CVV or identity document, or pairs a document name with an action verb.",
+        "category": "credential"
+      },
+      {
+        "id": "shortener",
+        "name": "URL shortener obfuscation",
+        "weight": 10,
+        "triggered": false,
+        "evidence": [],
+        "explanation": "A shortener prevents the recipient from seeing the destination before clicking.",
+        "category": "transport"
+      },
+      {
+        "id": "kyc",
+        "name": "KYC / verification lure",
+        "weight": 10,
+        "triggered": true,
+        "evidence": [
+          "\"KYC\"",
+          "\"kyc\"",
+          "\"verify\""
+        ],
+        "explanation": "KYC and re-verification are the most common pretexts for Indian banking fraud.",
+        "category": "pretext"
+      },
+      {
+        "id": "authority",
+        "name": "Authority / threat pressure",
+        "weight": 10,
+        "triggered": false,
+        "evidence": [],
+        "explanation": "Threats of arrest, FIR or legal action create fear that short-circuits verification.",
+        "category": "coercion"
+      },
+      {
+        "id": "prize",
+        "name": "Reward / lottery lure",
+        "weight": 10,
+        "triggered": false,
+        "evidence": [],
+        "explanation": "Unexpected winnings, refunds or cashback are used to pull the recipient into a payment flow.",
+        "category": "pretext"
+      },
+      {
+        "id": "apk",
+        "name": "APK / app install request",
+        "weight": 15,
+        "triggered": false,
+        "evidence": [],
+        "explanation": "A link to an Android package installs code outside the Play Store, where banking trojans are distributed.",
+        "category": "malware"
+      }
+    ],
+    "entities": [
+      {
+        "value": "http://sbi-kyc-verify.in",
+        "start": 16,
+        "end": 40,
+        "type": "url",
+        "normalized": "http://sbi-kyc-verify.in"
+      },
+      {
+        "value": "sbi-kyc-verify.in",
+        "start": 23,
+        "end": 40,
+        "type": "domain",
+        "normalized": "sbi-kyc-verify.in"
+      },
+      {
+        "value": "kyc.support@fakebank",
+        "start": 45,
+        "end": 65,
+        "type": "upi",
+        "normalized": "kyc.support@fakebank",
+        "suspicious": true,
+        "note": "unregistered handle @fakebank"
+      }
+    ],
+    "keywords": [
+      {
+        "category": "Urgency",
+        "matches": [
+          "URGENT"
+        ]
+      },
+      {
+        "category": "KYC",
+        "matches": [
+          "KYC",
+          "kyc",
+          "verify"
+        ]
+      },
+      {
+        "category": "Payment",
+        "matches": [
+          "pay"
+        ]
+      }
+    ],
+    "urls": [
+      {
+        "span": {
+          "value": "http://sbi-kyc-verify.in",
+          "start": 16,
+          "end": 40
+        },
+        "analysis": {
+          "input": "http://sbi-kyc-verify.in",
+          "normalized": "http://sbi-kyc-verify.in/",
+          "score": 80,
+          "riskLabel": "HIGH",
+          "heuristics": [
+            {
+              "id": "subdomain-depth",
+              "name": "Deep subdomain nesting",
+              "weight": 10,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Four or more subdomain levels are commonly used to bury a recognisable brand deep inside a long host.",
+              "category": "structure"
+            },
+            {
+              "id": "brand-impersonation",
+              "name": "Brand used outside its official domain",
+              "weight": 30,
+              "triggered": true,
+              "evidence": [
+                "\"sbi\" appears in sbi-kyc-verify.in/",
+                "official domains: sbi.co.in, onlinesbi.sbi, sbiyono.sbi, sbi, sbicard.com"
+              ],
+              "explanation": "A protected brand appears in the host or path, but the registrable domain is not owned by that brand.",
+              "category": "identity"
+            },
+            {
+              "id": "hyphens",
+              "name": "Hyphen-stacked hostname",
+              "weight": 10,
+              "triggered": true,
+              "evidence": [
+                "2 hyphens in \"sbi-kyc-verify.in\""
+              ],
+              "explanation": "Scam domains chain descriptive words with hyphens to look official (e.g. secure-login-verify).",
+              "category": "structure"
+            },
+            {
+              "id": "digits-in-domain",
+              "name": "Numeric padding in hostname",
+              "weight": 8,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Digits in the registrable label are often used to mint look-alike domains at scale.",
+              "category": "structure"
+            },
+            {
+              "id": "punycode",
+              "name": "Punycode or homoglyph hostname",
+              "weight": 25,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Internationalised or punycode characters can render as a different Latin brand name (homoglyph attack).",
+              "category": "identity"
+            },
+            {
+              "id": "suspicious-tld",
+              "name": "High-abuse TLD",
+              "weight": 15,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "This top-level domain is cheap, lightly policed and over-represented in phishing campaigns.",
+              "category": "structure"
+            },
+            {
+              "id": "ip-host",
+              "name": "Raw IP address instead of a domain",
+              "weight": 25,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Legitimate consumer services rarely publish links to a bare IP address.",
+              "category": "infrastructure"
+            },
+            {
+              "id": "port",
+              "name": "Non-standard network port",
+              "weight": 10,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Ports other than 80/443 bypass common URL filters and are unusual for public services.",
+              "category": "infrastructure"
+            },
+            {
+              "id": "http",
+              "name": "Unencrypted HTTP transport",
+              "weight": 10,
+              "triggered": true,
+              "evidence": [
+                "http://sbi-kyc-verify.in"
+              ],
+              "explanation": "Credentials submitted over plain HTTP can be read or modified in transit.",
+              "category": "transport"
+            },
+            {
+              "id": "at-sign",
+              "name": "Userinfo obfuscation (@ in URL)",
+              "weight": 20,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Everything before @ is userinfo; browsers ignore it, so the real destination hides after the @.",
+              "category": "identity"
+            },
+            {
+              "id": "length",
+              "name": "Unusually long URL",
+              "weight": 5,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Long URLs push the real destination out of view in mobile address bars and chat previews.",
+              "category": "structure"
+            },
+            {
+              "id": "suspicious-path",
+              "name": "Credential-harvesting path words",
+              "weight": 10,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Paths named for login, KYC or refund flows indicate a credential or payment capture page.",
+              "category": "intent"
+            },
+            {
+              "id": "shortener",
+              "name": "URL shortener",
+              "weight": 10,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Shorteners hide the final destination until the link is opened.",
+              "category": "transport"
+            },
+            {
+              "id": "entropy",
+              "name": "High-entropy domain label",
+              "weight": 10,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Randomly generated labels indicate automated phishing-domain registration.",
+              "category": "structure"
+            },
+            {
+              "id": "typosquat",
+              "name": "Typosquat / brand-combination domain",
+              "weight": 30,
+              "triggered": true,
+              "evidence": [
+                "registrable label \"sbi-kyc-verify\" imitates \"sbi\"",
+                "edit distance to \"sbi\": 11",
+                "legitimate domain: sbi.co.in"
+              ],
+              "explanation": "The registrable domain is a look-alike of SBI; the brand does not own it.",
+              "category": "identity"
+            }
+          ],
+          "breakdown": {
+            "protocol": "http",
+            "host": "sbi-kyc-verify.in",
+            "subdomain": "",
+            "domain": "sbi-kyc-verify",
+            "tld": "in",
+            "port": "",
+            "path": "",
+            "query": ""
+          },
+          "registrableDomain": "sbi-kyc-verify.in",
+          "brandMatch": "SBI",
+          "isShortener": false,
+          "isIp": false
+        }
+      }
+    ],
+    "summary": "This message is a high-risk artefact. It triggers 6 of 11 rules for a combined weight of 95 (capped at 100). The strongest signals are financial / government impersonation (25), suspicious domain structure (25), urgency language (15). It invokes SBI while directing the recipient to sbi-kyc-verify.in, which is not an official SBI domain (sbi.co.in). Payment is redirected to kyc.support@fakebank, which uses an unregistered UPI handle — no regulated PSP issues it. Do not open the link. Preserve the message and report it to 1930 (national cybercrime helpline)."
+  },
+  "rules": [
+    {
+      "id": "urgency",
+      "name": "Urgency language",
+      "weight": 15,
+      "triggered": true,
+      "evidence": [
+        "\"URGENT\""
+      ],
+      "explanation": "Time pressure suppresses deliberation. These phrases demand action before the recipient can verify the claim.",
+      "category": "coercion"
+    },
+    {
+      "id": "brand",
+      "name": "Financial / government impersonation",
+      "weight": 25,
+      "triggered": true,
+      "evidence": [
+        "brand \"SBI\" invoked via \"sbi\"",
+        "link does not belong to SBI: sbi-kyc-verify.in (official: sbi.co.in)"
+      ],
+      "explanation": "A regulated brand is named while the message links to a domain the brand does not own. A brand name alone is not evidence; the mismatch is.",
+      "category": "identity"
+    },
+    {
+      "id": "domain",
+      "name": "Suspicious domain structure",
+      "weight": 25,
+      "triggered": true,
+      "evidence": [
+        "sbi-kyc-verify.in scores 80/100",
+        "Brand used outside its official domain: \"sbi\" appears in sbi-kyc-verify.in/",
+        "Hyphen-stacked hostname: 2 hyphens in \"sbi-kyc-verify.in\"",
+        "Unencrypted HTTP transport: http://sbi-kyc-verify.in",
+        "Typosquat / brand-combination domain: registrable label \"sbi-kyc-verify\" imitates \"sbi\""
+      ],
+      "explanation": "The linked domain independently fails structural checks in the URL engine (brand mismatch, TLD, typosquat or obfuscation).",
+      "category": "identity"
+    },
+    {
+      "id": "http",
+      "name": "Insecure HTTP link",
+      "weight": 10,
+      "triggered": true,
+      "evidence": [
+        "http://sbi-kyc-verify.in uses http://"
+      ],
+      "explanation": "Any credential or payment page served over plain HTTP is unsafe regardless of how it looks.",
+      "category": "transport"
+    },
+    {
+      "id": "payment",
+      "name": "Payment request / identifier",
+      "weight": 10,
+      "triggered": true,
+      "evidence": [
+        "UPI kyc.support@fakebank (unregistered handle)",
+        "payment language \"pay\""
+      ],
+      "explanation": "The message routes the recipient toward a payment instrument — a UPI ID, wallet or bank account.",
+      "category": "financial"
+    },
+    {
+      "id": "credential",
+      "name": "Credential / OTP harvesting",
+      "weight": 15,
+      "triggered": false,
+      "evidence": [],
+      "explanation": "The message asks for an OTP, PIN, CVV or identity document, or pairs a document name with an action verb.",
+      "category": "credential"
+    },
+    {
+      "id": "shortener",
+      "name": "URL shortener obfuscation",
+      "weight": 10,
+      "triggered": false,
+      "evidence": [],
+      "explanation": "A shortener prevents the recipient from seeing the destination before clicking.",
+      "category": "transport"
+    },
+    {
+      "id": "kyc",
+      "name": "KYC / verification lure",
+      "weight": 10,
+      "triggered": true,
+      "evidence": [
+        "\"KYC\"",
+        "\"kyc\"",
+        "\"verify\""
+      ],
+      "explanation": "KYC and re-verification are the most common pretexts for Indian banking fraud.",
+      "category": "pretext"
+    },
+    {
+      "id": "authority",
+      "name": "Authority / threat pressure",
+      "weight": 10,
+      "triggered": false,
+      "evidence": [],
+      "explanation": "Threats of arrest, FIR or legal action create fear that short-circuits verification.",
+      "category": "coercion"
+    },
+    {
+      "id": "prize",
+      "name": "Reward / lottery lure",
+      "weight": 10,
+      "triggered": false,
+      "evidence": [],
+      "explanation": "Unexpected winnings, refunds or cashback are used to pull the recipient into a payment flow.",
+      "category": "pretext"
+    },
+    {
+      "id": "apk",
+      "name": "APK / app install request",
+      "weight": 15,
+      "triggered": false,
+      "evidence": [],
+      "explanation": "A link to an Android package installs code outside the Play Store, where banking trojans are distributed.",
+      "category": "malware"
+    }
+  ],
+  "entities": [
+    {
+      "type": "domain",
+      "value": "sbi-kyc-verify.in",
+      "cases": 10,
+      "risk": 100
+    },
+    {
+      "type": "upi",
+      "value": "kyc.support@fakebank",
+      "cases": 9,
+      "risk": 100
+    },
+    {
+      "type": "url",
+      "value": "http://sbi-kyc-verify.in",
+      "cases": 1,
+      "risk": 95
+    }
+  ],
+  "correlations": [
+    {
+      "type": "domain",
+      "value": "sbi-kyc-verify.in",
+      "cases": [
+        "TRC-2026-0019 · QA report case",
+        "TRC-2026-0018 · QA APK case",
+        "TRC-2026-0017 · QA message case",
+        "TRC-2026-0016 · QA repeated URL",
+        "TRC-2026-0015 · QA correlated message",
+        "TRC-2026-0011 · SBI KYC Update APK — banker trojan",
+        "TRC-2026-0007 · Instant loan app — sideloaded APK",
+        "TRC-2026-0003 · SBI YONO re-activation with KYC fee",
+        "TRC-2026-0002 · SBI reward points expiry lure",
+        "TRC-2026-0001 · SBI KYC suspension — verification fee"
+      ]
+    },
+    {
+      "type": "upi",
+      "value": "kyc.support@fakebank",
+      "cases": [
+        "TRC-2026-0019 · QA report case",
+        "TRC-2026-0018 · QA APK case",
+        "TRC-2026-0017 · QA message case",
+        "TRC-2026-0015 · QA correlated message",
+        "TRC-2026-0011 · SBI KYC Update APK — banker trojan",
+        "TRC-2026-0007 · Instant loan app — sideloaded APK",
+        "TRC-2026-0003 · SBI YONO re-activation with KYC fee",
+        "TRC-2026-0002 · SBI reward points expiry lure",
+        "TRC-2026-0001 · SBI KYC suspension — verification fee"
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "id": 45,
+      "case_id": "TRC-2026-0019",
+      "type": "entities",
+      "message": "3 indicators linked (1 new)",
+      "created_at": "2026-11-22T07:37:55.031Z"
+    },
+    {
+      "id": 44,
+      "case_id": "TRC-2026-0019",
+      "type": "created",
+      "message": "Case opened from message analysis",
+      "created_at": "2026-11-22T07:37:55.031Z"
+    }
+  ],
+  "notes": "",
+  "methodology": "Deterministic rule-based analysis; no machine learning used. Every score is the sum of documented rule weights, capped at 100, with the triggering evidence retained verbatim.",
+  "integrityHash": "27feee07f33086ac44aa44d11b46aadb500102c7adb302aa3d71d488af3af8bf"
+}

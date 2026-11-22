@@ -32,7 +32,7 @@ export function Preloader() {
   if (done) return null;
 
   return (
-    <div className={`preloader-curtain ${open ? 'preloader-open' : ''}`} aria-hidden="true">
+    <div className={`preloader-curtain ${open ? 'preloader-open' : ''}`} data-testid="preloader" aria-hidden="true">
       <div className="preloader-half top" />
       <div className="preloader-half bottom" />
       <div

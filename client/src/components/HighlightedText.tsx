@@ -42,6 +42,7 @@ export function HighlightedText({
       <mark
         key={`${entity.start}-${i}`}
         className={CLASS_MAP[entity.type] ?? 'mark'}
+        data-testid="highlight"
         data-tip={showTips ? `${label} · ${entity.note ?? entity.value}` : undefined}
         aria-label={`${label}: ${entity.value}`}
       >
