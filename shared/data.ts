@@ -90,6 +90,8 @@ export const URGENCY_PATTERNS = [
   /\b(?:expires?|expiring)\s+(?:today|soon)\b/gi,
   /\bfinal\s+notice\b/gi,
   /\bact\s+now\b/gi,
+  /\babhi\b/gi,
+  /\bturant\b/gi,
 ];
 
 export const KYC_PATTERNS = [
@@ -151,6 +153,77 @@ export const APK_PATTERNS = [
   /\bupdate\s+(?:the\s+)?app\b/gi,
   /\bsideload\b/gi,
 ];
+
+/* ------------------------------------------------------------------ */
+/* Phase A — link-less scam families. Case-insensitive by construction. */
+/* ------------------------------------------------------------------ */
+
+/** A "new number / lost phone" story. Must pair with a money request to fire. */
+export const FAMILY_STORY_PATTERNS = [
+  /\bthis\s+is\s+my\s+new\s+(?:number|phone|mobile|sim)\b/gi,
+  /\b(?:it'?s|this\s+is)\s+my\s+new\b/gi,
+  /\bnew\s+(?:number|sim)\b/gi,
+  /\bnaya\s+number\b/gi,
+  /\b(?:phone|mobile|cell|sim)\s+(?:broke|broken|lost|damaged|stolen|switched\s+off|kharab)\b/gi,
+  /\bphone\s+kharab\b/gi,
+  /\bnumber\s+badl\s+gaya\b/gi,
+  /\b(?:mummy|mumma|mom|papa|dad|daddy)\b/gi,
+];
+
+/** Money / urgency request. Must pair with a family story to fire. */
+export const FAMILY_MONEY_PATTERNS = [
+  /\bsend\s+(?:me\s+)?(?:some\s+)?money\b/gi,
+  /\btransfer\s+(?:me\s+)?(?:some\s+)?(?:money|cash|funds)\b/gi,
+  /\bpay\s+(?:a\s+)?bill\b/gi,
+  /\b(?:need|require)\s+(?:some\s+)?(?:money|cash|funds)\b/gi,
+  /\bpaise\s+bhej(?:o|do|na|dena)\b/gi,
+  /\bpaisa\s+bhej(?:o|do|na|dena)\b/gi,
+  /\b(?:rs\.?|₹)\s?\d{2,6}\b/gi,
+  /\burgent(?:ly)?\b/gi,
+  /\babhi\b/gi,
+  /\bturant\b/gi,
+  /\bupi\b/gi,
+];
+
+/** Job / task lure. Fires with earning language. */
+export const JOB_PATTERNS = [
+  /\bpart[-\s]?time\b/gi,
+  /\bwork\s+from\s+home\b/gi,
+  /\bremote\s+(?:role|job|work)\b/gi,
+  /\blike\s+(?:videos?|reels?|posts?)\b/gi,
+  /\bsimple\s+tasks?\b/gi,
+  /\bghar\s+baithe\b/gi,
+  /\btelegram\b/gi,
+];
+
+/** Earning language required alongside a job lure. */
+export const JOB_EARNING_PATTERNS = [
+  /\b(?:earn|make|income|salary|payout|kama(?:o|i|ye))\b/gi,
+  /\b(?:rs\.?|₹)\s?[\d,]+\s*(?:per|\/|a)\s*(?:day|hour|week)\b/gi,
+  /\bdaily\s+(?:payout|earning|income|payment)\b/gi,
+  /\bpaise\s+kamao\b/gi,
+];
+
+/** "I sent my code by mistake" — OTP forward requests. */
+export const ACCIDENTAL_CODE_PATTERNS = [
+  /\bsent\s+(?:my|the|your)?\s*(?:code|otp)\s+by\s+mistake\b/gi,
+  /\b(?:accidentally|by\s+mistake)\s+(?:sent|forwarded)\b/gi,
+  /\bforward\s+(?:me\s+)?(?:the\s+)?(?:code|otp)\b/gi,
+  /\bsend\s+(?:me\s+)?(?:the\s+)?(?:6|six)[-\s]?digit\s+(?:code|otp)\b/gi,
+  /\bcode\s+by\s+mistake\b/gi,
+  /\bgalti\s+se\s+(?:code|otp)\b/gi,
+  /\botp\s+bhej\s+(?:do|dena)\b/gi,
+];
+
+/** Utility disconnection threats. */
+export const UTILITY_PATTERNS = [
+  /\b(?:electricity|power|gas|water|sim|mobile|broadband|dth)\b[^.!?]{0,40}\b(?:disconnect|disconnection|cut\s+off)\b/gi,
+  /\b(?:disconnect|disconnection|cut\s+off)\b[^.!?]{0,40}\b(?:electricity|power|gas|water|sim|mobile|broadband|dth)\b/gi,
+  /\bwill\s+be\s+(?:disconnected|cut\s+off)\b/gi,
+  /\b(?:bijli|paani|gas)\s+(?:kat|band)\s+(?:jayegi|hogi|jaega)\b/gi,
+  /\bpay\s+via\s+this\s+link\b/gi,
+];
+
 
 export const SUSPICIOUS_PATH_WORDS = [
   'login', 'signin', 'verify', 'verification', 'kyc', 'secure', 'security',

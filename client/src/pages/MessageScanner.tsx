@@ -16,7 +16,7 @@ import {
 import { SAMPLE_MESSAGES, analyzeMessage } from '@shared/message';
 import type { MessageAnalysis } from '@shared/types';
 import { api } from '@/lib/api';
-import { riskClass } from '@/lib/format';
+import { riskClass, verdictColor, verdictText } from '@/lib/format';
 import { useDebounce } from '@/lib/hooks';
 import { downloadReportPdf } from '@/lib/pdf';
 import { cn } from '@/lib/cn';
@@ -33,6 +33,7 @@ import {
   RuleTable,
   ScoreBar,
   ScoreBlock,
+  VerdictPill,
 } from '@/components/ui';
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -43,6 +44,18 @@ const CATEGORY_LABEL: Record<string, string> = {
   credential: 'Credential',
   pretext: 'Pretext',
   malware: 'Malware',
+};
+
+const SCAM_TYPE_LABEL: Record<string, string> = {
+  'family-impersonation': 'Family impersonation',
+  'job-scam': 'Fake job / task scam',
+  'accidental-code': 'Accidental code request',
+  'utility-threat': 'Utility disconnection',
+  'kyc-bank': 'Bank / KYC fraud',
+  'delivery-prize': 'Delivery / prize fraud',
+  'digital-arrest': 'Digital arrest',
+  'apk-loan': 'Loan APK',
+  unknown: 'Unclassified',
 };
 
 export default function MessageScanner() {
@@ -269,7 +282,18 @@ export default function MessageScanner() {
                         onClick={() => navigate(`/app/url?u=${encodeURIComponent(u.span.value)}`)}
                         className="group flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-[var(--fill-1)]"
                       >
-                        <span className={riskClass(u.analysis.riskLabel)}>{u.analysis.riskLabel}</span>
+                        <span
+                          className={riskClass(
+                            u.analysis.verdict.verdict === 'MALICIOUS'
+                              ? 'HIGH'
+                              : u.analysis.verdict.verdict === 'SUSPICIOUS'
+                                ? 'MEDIUM'
+                                : 'LOW',
+                          )}
+                          style={{ color: verdictColor(u.analysis.verdict.verdict) }}
+                        >
+                          {verdictText(u.analysis.verdict.verdict)}
+                        </span>
                         <div className="min-w-0 flex-1">
                           <div className="mono truncate text-[11.5px] text-ink-2 group-hover:text-ink">{u.span.value}</div>
                           <div className="mt-0.5 text-[10px] text-ink-3">
@@ -321,6 +345,34 @@ export default function MessageScanner() {
         <div className="space-y-4 lg:sticky lg:top-20">
           {active && (
             <>
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <Label>Verdict</Label>
+                  <span className="mono text-[9px] uppercase tracking-[0.1em] text-ink-3">
+                    {active.verdict.confidence} confidence
+                  </span>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <VerdictPill verdict={active.verdict.verdict} />
+                  <span className="mono text-[10px] text-ink-3">
+                    {active.score}/100 · {active.verdict.categories.length} categor
+                    {active.verdict.categories.length === 1 ? 'y' : 'ies'}
+                  </span>
+                </div>
+                <div className="mt-3 rounded-md border border-line bg-bg-1 px-3 py-2">
+                  <div className="mono text-[9px] uppercase tracking-[0.1em] text-ink-3">Scam type</div>
+                  <div className="mt-0.5 text-[12px] text-ink-2">
+                    {SCAM_TYPE_LABEL[active.scamType] ?? active.scamType}
+                  </div>
+                </div>
+                <p className="mt-3 text-[11.5px] leading-relaxed text-ink-2">{active.safetyAdvice}</p>
+                {active.verdict.verdict === 'NO_INDICATORS' && active.verdict.disclaimer && (
+                  <p className="mt-2 border-t border-line pt-2 text-[11px] leading-relaxed text-ink-3">
+                    {active.verdict.disclaimer}
+                  </p>
+                )}
+              </Card>
+
               <Card className="p-4">
                 <div className="flex items-center justify-between">
                   <Label>Composite risk</Label>
@@ -448,7 +500,7 @@ export default function MessageScanner() {
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <Label>Detection coverage</Label>
-              <span className="mono text-[9px] text-ink-3">{active ? `${triggered.length}/${active.rules.length}` : '11'}</span>
+              <span className="mono text-[9px] text-ink-3">{active ? `${triggered.length}/${active.rules.length}` : '—'}</span>
             </div>
             <div className="mt-3 space-y-1.5">
               {(active ? active.rules : []).map((rule) => (
@@ -468,11 +520,32 @@ export default function MessageScanner() {
               ))}
               {!fresh && (
                 <div className="py-2 text-[11.5px] leading-relaxed text-ink-3">
-                  Run an analysis to see which of the eleven deterministic checks fired.
+                  Run an analysis to see which deterministic checks fired.
                 </div>
               )}
             </div>
           </Card>
+
+          {active && (
+            <Card className="p-4" data-testid="coverage-panel">
+              <div className="flex items-center justify-between">
+                <Label>What we could not check</Label>
+                <span className="mono text-[9px] text-ink-3">{active.verdict.coverage.checksRun.length} RAN</span>
+              </div>
+              <ul className="mt-3 space-y-2">
+                {active.verdict.coverage.checksSkipped.map((skip) => (
+                  <li key={skip.id} className="flex gap-2 text-[11px] leading-relaxed text-ink-3">
+                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--fill-5)]" />
+                    <span>
+                      <span className="mono text-[9px] uppercase tracking-[0.1em] text-ink-2">{skip.id}</span>
+                      <br />
+                      {skip.reason}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
           <Card className="p-4">
             <div className="flex items-center justify-between">

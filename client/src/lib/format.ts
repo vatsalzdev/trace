@@ -12,6 +12,17 @@ export function riskColor(label?: RiskLabel | string): string {
   return 'var(--ok)';
 }
 
+export function verdictText(verdict?: string): string {
+  return (verdict ?? 'NO_INDICATORS').replace(/_/g, ' ');
+}
+
+export function verdictColor(verdict?: string): string {
+  if (verdict === 'MALICIOUS') return 'var(--danger)';
+  if (verdict === 'SUSPICIOUS') return 'var(--warn)';
+  if (verdict === 'INCONCLUSIVE') return 'var(--ink-3)';
+  return 'var(--ok)';
+}
+
 export function relativeTime(iso: string): string {
   if (!iso) return '—';
   const then = new Date(iso).getTime();

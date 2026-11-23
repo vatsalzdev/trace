@@ -1,4 +1,48 @@
 export type RiskLabel = 'LOW' | 'MEDIUM' | 'HIGH';
+
+/** Product-wide verdict vocabulary. Never replace with "safe", "clean" or "verified". */
+export type Verdict = 'MALICIOUS' | 'SUSPICIOUS' | 'NO_INDICATORS' | 'INCONCLUSIVE';
+export type Confidence = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export interface CoverageCheck {
+  id: string;
+  reason: string;
+}
+
+export interface Coverage {
+  checksRun: string[];
+  checksSkipped: CoverageCheck[];
+}
+
+export interface VerdictFinding {
+  id: string;
+  weight: number;
+  evidence: string[];
+  explanation: string;
+  category?: string;
+}
+
+export interface VerdictResult {
+  verdict: Verdict;
+  score: number;
+  confidence: Confidence;
+  findings: VerdictFinding[];
+  coverage: Coverage;
+  categories: string[];
+  /** Present only for NO_INDICATORS. Must be rendered verbatim wherever the verdict appears. */
+  disclaimer?: string;
+}
+
+export type ScamType =
+  | 'family-impersonation'
+  | 'job-scam'
+  | 'accidental-code'
+  | 'utility-threat'
+  | 'kyc-bank'
+  | 'delivery-prize'
+  | 'digital-arrest'
+  | 'apk-loan'
+  | 'unknown';
 export type EntityType =
   | 'domain'
   | 'url'
@@ -61,6 +105,7 @@ export interface UrlAnalysis {
   brandMatch?: string;
   isShortener: boolean;
   isIp: boolean;
+  verdict: VerdictResult;
 }
 
 export interface RedirectHop {
@@ -108,6 +153,9 @@ export interface MessageAnalysis {
   keywords: { category: string; matches: string[] }[];
   urls: { span: Span; analysis: UrlAnalysis }[];
   summary: string;
+  scamType: ScamType;
+  safetyAdvice: string;
+  verdict: VerdictResult;
 }
 
 export interface ApkPermission {

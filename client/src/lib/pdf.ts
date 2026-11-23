@@ -212,9 +212,14 @@ export function buildReportPdf(payload: ReportPayload): jsPDF {
 
   /* 1 — executive summary */
   heading('01', 'Executive summary');
+  const verdict = analysis?.verdict;
+  const verdictLabel = verdict?.verdict ?? 'INCONCLUSIVE';
   body(
-    `${c.id} is a ${c.risk_label.toLowerCase()}-risk ${c.source_type} case scoring ${c.risk_score}/100. ${payload.rules.length} detection rule${payload.rules.length === 1 ? '' : 's'} triggered, and ${payload.entities.length} indicator${payload.entities.length === 1 ? '' : 's'} were extracted and normalised into the entity index.`,
+    `${c.id} is a ${c.source_type} case. TRACE verdict: ${verdictLabel} (confidence ${verdict?.confidence ?? 'LOW'}, score ${verdict?.score ?? c.risk_score}/100). ${payload.rules.length} finding${payload.rules.length === 1 ? '' : 's'} triggered, and ${payload.entities.length} indicator${payload.entities.length === 1 ? '' : 's'} were extracted and normalised into the entity index.`,
   );
+  if (analysis?.scamType) body(`Scam type: ${analysis.scamType}.`);
+  if (analysis?.safetyAdvice) body(analysis.safetyAdvice);
+  if (verdictLabel === 'NO_INDICATORS' && verdict?.disclaimer) body(verdict.disclaimer);
   if (payload.correlations.length) {
     body(
       `Entity correlation found ${payload.correlations.length} indicator${payload.correlations.length === 1 ? '' : 's'} reused across other cases. Reuse is the strongest link between otherwise separate complaints: ${payload.correlations
@@ -347,6 +352,19 @@ export function buildReportPdf(payload: ReportPayload): jsPDF {
     'TRACE applies deterministic pattern extraction and weighted rules. Each score is the sum of triggered weights, capped at 100, with the exact matched evidence retained. Network enrichment (RDAP, DNS, TLS, redirects) uses a four-second budget per source and falls back to documented local fixtures; the report states whether live or cached data was used.',
     8.8,
   );
+  const coverage = analysis?.verdict?.coverage;
+  if (coverage) {
+    body(`Coverage — checks run: ${coverage.checksRun.join('; ')}.`, 8.4);
+    if (coverage.checksSkipped?.length) {
+      body(
+        `Not checked: ${coverage.checksSkipped.map((s: any) => `${s.id} (${s.reason})`).join('; ')}.`,
+        8.4,
+      );
+    }
+  }
+  if (verdictLabel === 'NO_INDICATORS' && verdict?.disclaimer) {
+    body(verdict.disclaimer, 8.4);
+  }
   ensure(46);
   doc.setFont('courier', 'normal');
   doc.setFontSize(7.2);

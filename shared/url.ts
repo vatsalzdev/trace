@@ -7,6 +7,7 @@ import {
   URL_SHORTENERS,
 } from './data';
 import type { RiskLabel, UrlAnalysis, UrlBreakdown, UrlHeuristic } from './types';
+import { computeVerdict } from './verdict';
 
 export function riskFromScore(score: number): RiskLabel {
   if (score >= 60) return 'HIGH';
@@ -332,6 +333,27 @@ export function analyzeUrl(input: string): UrlAnalysis {
   const score = Math.min(100, heuristics.reduce((sum, h) => sum + (h.triggered ? h.weight : 0), 0));
   const brandMatch = brandHit && !official ? brandHit.brand.name : undefined;
 
+  const verdict = computeVerdict({
+    score,
+    findings: heuristics.map((h) => ({
+      id: h.id,
+      weight: h.weight,
+      evidence: h.evidence,
+      explanation: h.explanation,
+      category: h.category,
+      triggered: h.triggered,
+    })),
+    coverage: {
+      checksRun: ['public-suffix and registrable-domain parsing', 'structural heuristics', 'brand and typosquat comparison'],
+      checksSkipped: [
+        { id: 'domain-age', reason: 'Registration age requires a live RDAP lookup.' },
+        { id: 'dns-tls', reason: 'DNS and TLS checks are not part of static URL analysis.' },
+        { id: 'reputation', reason: 'No reputation provider is configured.' },
+        { id: 'deep-scan', reason: 'Page fetching is not enabled.' },
+      ],
+    },
+  });
+
   return {
     input,
     normalized: url.href,
@@ -343,6 +365,7 @@ export function analyzeUrl(input: string): UrlAnalysis {
     brandMatch: brandMatch ?? (typosquatBrand || undefined),
     isShortener: shortener,
     isIp,
+    verdict,
   };
 }
 

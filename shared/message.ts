@@ -1,17 +1,24 @@
 import {
+  ACCIDENTAL_CODE_PATTERNS,
   APK_PATTERNS,
   AUTHORITY_PATTERNS,
   BRANDS,
   CREDENTIAL_PATTERNS,
   EMAIL_DOMAINS,
+  FAMILY_MONEY_PATTERNS,
+  FAMILY_STORY_PATTERNS,
+  JOB_EARNING_PATTERNS,
+  JOB_PATTERNS,
   KNOWN_UPI_HANDLES,
   KYC_PATTERNS,
   PAYMENT_PATTERNS,
   PRIZE_PATTERNS,
   URGENCY_PATTERNS,
+  UTILITY_PATTERNS,
 } from './data';
-import type { ExtractedEntity, MessageAnalysis, Rule, Span } from './types';
+import type { ExtractedEntity, MessageAnalysis, Rule, ScamType, Span } from './types';
 import { analyzeUrl, isIpHost, isOfficialHost, parseBreakdown, riskFromScore, splitHost } from './url';
+import { computeVerdict, rulesToFindings } from './verdict';
 
 const TLDS =
   'com|in|net|org|io|co|info|biz|me|dev|app|ai|gov|edu|us|uk|au|ca|de|fr|ru|cn|jp|sg|ae|pk|bd|np|lk|br|za|sbi|link|online|site|store|tech|cloud|pro|mobi|asia|tv|cc|ws|to|ly|xyz|top|click|icu|vip|live|shop|cfd|sbs|buzz|fit|monster|rest|quest|cyou|bond|work|support|help|surf|tk|ml|ga|cf|gq|zip|mov|country|download|stream';
@@ -210,6 +217,54 @@ function rule(
   return { id, name, weight, triggered, evidence: triggered ? [...new Set(evidence)].slice(0, 6) : [], explanation, category };
 }
 
+/**
+ * Type-defining rules, most specific first. The winner is the highest-weight
+ * triggered rule in this set; ties keep this order. Generic rules (urgency,
+ * http, domain) never decide the scam family.
+ */
+const SCAM_TYPE_RULES: { id: string; type: ScamType }[] = [
+  { id: 'family-impersonation', type: 'family-impersonation' },
+  { id: 'accidental-code', type: 'accidental-code' },
+  { id: 'job-scam', type: 'job-scam' },
+  { id: 'apk', type: 'apk-loan' },
+  { id: 'utility-threat', type: 'utility-threat' },
+  { id: 'authority', type: 'digital-arrest' },
+  { id: 'kyc', type: 'kyc-bank' },
+  { id: 'prize', type: 'delivery-prize' },
+  { id: 'shortener', type: 'delivery-prize' },
+];
+
+export const SAFETY_ADVICE: Record<ScamType, string> = {
+  'family-impersonation':
+    'Call the family member back on their known number. Never send money to a new number based on a message alone.',
+  'job-scam':
+    'No genuine employer asks for a registration or training fee. Verify the company on its official careers page before paying or sharing documents.',
+  'accidental-code':
+    'Never forward an OTP or verification code to anyone. A code sent "by mistake" is an attempt to take over your account.',
+  'utility-threat':
+    'Pay utility bills only through the official app or website. Disconnection threats sent by SMS with links are scams.',
+  'kyc-bank':
+    "Never share OTPs, PINs or card details. Open your bank's official app to check KYC status instead of tapping links.",
+  'delivery-prize':
+    "Track parcels only on the courier's official site. You do not need to pay a fee to receive a parcel or claim a prize.",
+  'digital-arrest':
+    'No police or government agency arrests or fines people over a video call or chat. Hang up and report to 1930.',
+  'apk-loan':
+    'Do not install APKs sent by message. Download apps only from the Play Store, and never grant SMS or accessibility access to a loan app.',
+  unknown:
+    'Treat unexpected requests for money, codes or app installs as hostile. Verify through the official app or a known phone number.',
+};
+
+/** Deterministic: highest-weight type-defining rule, ties by specificity order. */
+export function deriveScamType(rules: Rule[]): ScamType {
+  const triggered = new Map(rules.filter((r) => r.triggered).map((r) => [r.id, r]));
+  const candidates = SCAM_TYPE_RULES.map((entry, order) => ({ ...entry, order }))
+    .filter((entry) => triggered.has(entry.id))
+    .map((entry) => ({ ...entry, weight: triggered.get(entry.id)?.weight ?? 0 }))
+    .sort((a, b) => b.weight - a.weight || a.order - b.order);
+  return candidates[0]?.type ?? 'unknown';
+}
+
 export function analyzeMessage(text: string): MessageAnalysis {
   const input = text ?? '';
   const entities = extractEntities(input);
@@ -226,6 +281,16 @@ export function analyzeMessage(text: string): MessageAnalysis {
   const paymentWords = collectPatterns(PAYMENT_PATTERNS, input);
   const apkWords = collectPatterns(APK_PATTERNS, input);
   const otpMentions = collectPatterns([OTP_MENTION_RE], input);
+  const familyStory = collectPatterns(FAMILY_STORY_PATTERNS, input);
+  const familyMoney = collectPatterns(FAMILY_MONEY_PATTERNS, input);
+  const jobLure = collectPatterns(JOB_PATTERNS, input);
+  const jobEarning = collectPatterns(JOB_EARNING_PATTERNS, input);
+  const accidentalCode = collectPatterns(ACCIDENTAL_CODE_PATTERNS, input);
+  const utility = collectPatterns(UTILITY_PATTERNS, input);
+  const utilityDisconnect =
+    /(?:disconnect|cut\s*off|kat\s*(?:jayegi|hogi|jaega))/i.test(input) &&
+    /(?:electricity|power|gas|water|sim|mobile|broadband|dth|bijli|paani)/i.test(input);
+  const utilityThreat = utilityDisconnect || (/\btonight\b/i.test(input) && /\bpay\b/i.test(input) && /\blink\b/i.test(input));
 
   const brandHits: { brand: (typeof BRANDS)[number]; keyword: string }[] = [];
   for (const brand of BRANDS) {
@@ -370,11 +435,64 @@ export function analyzeMessage(text: string): MessageAnalysis {
       apkWords.length > 0 || Boolean(apkLink),
       'malware',
     ),
+    rule(
+      'family-impersonation',
+      'Family impersonation (new number)',
+      30,
+      [...familyStory.map((s) => `story "${s}"`), ...familyMoney.map((m) => `money request "${m}"`)],
+      'A "new number" or lost-phone story is paired with a request for money. Both halves are required: family words alone are common, and the combination is the scam.',
+      familyStory.length > 0 && familyMoney.length > 0,
+      'identity',
+    ),
+    rule(
+      'job-scam',
+      'Fake job / task scam',
+      25,
+      [...jobLure.map((j) => `job lure "${j}"`), ...jobEarning.map((e) => `earning claim "${e}"`)],
+      'A work-from-home or part-time task offer is paired with daily earning claims. Legitimate employers do not recruit or pay through messaging apps.',
+      jobLure.length > 0 && jobEarning.length > 0,
+      'pretext',
+    ),
+    rule(
+      'accidental-code',
+      'Accidental code / OTP forward request',
+      30,
+      accidentalCode.map((c) => `"${c}"`),
+      'The sender claims a verification code was sent to you by mistake and asks you to forward it. No legitimate service asks you to pass on a code.',
+      accidentalCode.length > 0,
+      'credential',
+    ),
+    rule(
+      'utility-threat',
+      'Utility disconnection threat',
+      15,
+      utility.map((u) => `"${u}"`),
+      'An electricity, gas, water or SIM disconnection is threatened with a payment link. Utilities do not disconnect over a texted link.',
+      utilityThreat,
+      'coercion',
+    ),
   ];
 
   const triggered = rules.filter((r) => r.triggered);
   const score = Math.min(100, triggered.reduce((sum, r) => sum + r.weight, 0));
   const riskLabel = riskFromScore(score);
+  const scamType = deriveScamType(rules);
+  const safetyAdvice = SAFETY_ADVICE[scamType];
+  const verdict = computeVerdict({
+    score,
+    findings: rulesToFindings(rules),
+    coverage: {
+      checksRun: [
+        'entity extraction (URL, email, UPI, phone, IFSC, account, wallet)',
+        'keyword and pattern rules',
+        'per-URL structural analysis',
+      ],
+      checksSkipped: [
+        { id: 'network-reputation', reason: 'Link reputation and domain registration are not checked for messages; only static text rules run.' },
+        { id: 'sender-verification', reason: 'Sender ID and phone-number ownership cannot be verified offline.' },
+      ],
+    },
+  });
 
   const keywords = [
     { category: 'Urgency', matches: urgency },
@@ -389,7 +507,7 @@ export function analyzeMessage(text: string): MessageAnalysis {
 
   const summary = buildSummary({ riskLabel, score, triggered, brandHits, brandUrls, upis, credential, authority, apkLink, maxUrlScore, urlAnalyses });
 
-  return { input, score, riskLabel, rules, entities, keywords, urls: urlAnalyses, summary };
+  return { input, score, riskLabel, rules, entities, keywords, urls: urlAnalyses, summary, scamType, safetyAdvice, verdict };
 }
 
 function buildSummary(args: {
@@ -412,7 +530,7 @@ function buildSummary(args: {
   const parts: string[] = [];
   const top = [...triggered].sort((a, b) => b.weight - a.weight).slice(0, 3);
   parts.push(
-    `This message is a ${riskLabel.toLowerCase()}-risk artefact. It triggers ${triggered.length} of ${11} rules for a combined weight of ${score} (capped at 100).`,
+    `This message is a ${riskLabel.toLowerCase()}-risk artefact. It triggers ${triggered.length} rules for a combined weight of ${score} (capped at 100).`,
   );
   parts.push(`The strongest signals are ${top.map((r) => `${r.name.toLowerCase()} (${r.weight})`).join(', ')}.`);
   if (brandHits.length && brandUrls.length) {
@@ -485,5 +603,65 @@ export const SAMPLE_MESSAGES: SampleMessage[] = [
     label: 'Genuine OTP (control)',
     channel: 'SMS',
     text: '123456 is your OTP for txn of Rs 500 at AMAZON. Do not share this OTP with anyone. -HDFC Bank',
+  },
+  {
+    id: 'family-new-number',
+    label: 'Family "new number"',
+    channel: 'WhatsApp',
+    text: 'Mummy, this is my new number. My phone broke and I am using a friend’s SIM. Please send money urgently to this UPI, I will explain later.',
+  },
+  {
+    id: 'family-hinglish',
+    label: 'Family "new number" (Hinglish)',
+    channel: 'WhatsApp',
+    text: 'Papa mera phone kharab ho gaya, ye naya number hai. Mujhe abhi 5000 rs bhejo, paise bhejo isi UPI par. Turant bhejo please.',
+  },
+  {
+    id: 'job-part-time',
+    label: 'Part-time job lure',
+    channel: 'WhatsApp',
+    text: 'Work from home part-time job! Like videos on YouTube and earn Rs 1500 per day. Simple tasks, daily payout. A one-time registration fee of Rs 199 is required. Join our Telegram group to start.',
+  },
+  {
+    id: 'accidental-code',
+    label: 'Accidental OTP forward',
+    channel: 'SMS',
+    text: 'Hi, I accidentally sent my verification code to your number by mistake. Please forward the 6-digit code back, it is urgent.',
+  },
+  {
+    id: 'utility-electricity',
+    label: 'Electricity disconnection',
+    channel: 'SMS',
+    text: 'Dear consumer, your electricity will be disconnected tonight due to an unpaid bill. Pay via this link immediately to avoid disconnection: http://bijli-bill-pay.xyz',
+  },
+  {
+    id: 'family-control',
+    label: 'Family chat (control)',
+    channel: 'WhatsApp',
+    text: 'Hi Papa, my phone is switched off for repair, so I am using this number. Nothing serious — call me when you are free.',
+  },
+  {
+    id: 'job-control',
+    label: 'Interview notice (control)',
+    channel: 'Email',
+    text: 'Your interview for the analyst role is confirmed for Monday 11am at our Bengaluru office. Reply to this email to confirm attendance.',
+  },
+  {
+    id: 'code-control',
+    label: 'Login code (control)',
+    channel: 'SMS',
+    text: 'Your login code is 482913. Do not share it with anyone, including bank staff. It expires in 10 minutes.',
+  },
+  {
+    id: 'utility-control',
+    label: 'Bill reminder (control)',
+    channel: 'SMS',
+    text: 'Your electricity bill of Rs 640 for October is due on 30 November. Pay through the official app or at an authorised centre.',
+  },
+  {
+    id: 'delivery-control',
+    label: 'Delivery notice (control)',
+    channel: 'SMS',
+    text: 'Your parcel is out for delivery today between 10am and 1pm. No payment is needed. Track it in the official app.',
   },
 ];

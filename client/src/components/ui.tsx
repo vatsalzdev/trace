@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Check, ChevronDown, Copy, Minus, Plus } from 'lucide-react';
 import type { Rule } from '@shared/types';
 import { cn } from '@/lib/cn';
-import { riskClass, riskColor } from '@/lib/format';
+import { riskClass, riskColor, verdictColor, verdictText } from '@/lib/format';
 import { useCountUp, useInView } from '@/lib/hooks';
 
 /* -------------------------------- buttons -------------------------------- */
@@ -82,6 +82,20 @@ export function RiskPill({ label, score }: { label?: string; score?: number }) {
       />
       {label ?? 'LOW'}
       {typeof score === 'number' && <span className="opacity-60">{score}</span>}
+    </span>
+  );
+}
+
+export function VerdictPill({ verdict, confidence }: { verdict?: string; confidence?: string }) {
+  const strong = verdict === 'MALICIOUS' || verdict === 'SUSPICIOUS';
+  return (
+    <span
+      className={cn('risk-pill', strong ? (verdict === 'MALICIOUS' ? 'risk-high' : 'risk-medium') : 'border border-line bg-bg-1 text-ink-2')}
+      data-testid="verdict-pill"
+    >
+      <span className="inline-block h-1 w-1 rounded-full" style={{ background: verdictColor(verdict) }} />
+      {verdictText(verdict)}
+      {confidence && <span className="opacity-60">{confidence}</span>}
     </span>
   );
 }
