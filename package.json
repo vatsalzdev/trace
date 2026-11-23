@@ -17,6 +17,7 @@
     "start": "npm run start -w server",
     "test:api": "node --test tests/api.test.mjs && tsx --test tests/phase-d.test.ts",
     "eval": "tsx eval/run.ts",
+    "eval:heldout": "tsx eval/heldout/run.ts",
     "test:e2e": "playwright test",
     "test:contrast": "node scripts/check-contrast.mjs"
   },

@@ -1,5 +1,5 @@
 {
-  "reportId": "RPT-2026-0019-MWTJYR28",
+  "reportId": "RPT-2026-0019-MWTOFNP4",
   "case": {
     "id": "TRC-2026-0019",
     "title": "QA report case",
@@ -8,8 +8,8 @@
     "risk_score": 95,
     "source_type": "message",
     "raw_input": "URGENT! SBI KYC http://sbi-kyc-verify.in pay kyc.support@fakebank",
-    "created_at": "2026-11-23T17:41:38.016Z",
-    "updated_at": "2026-11-23T17:41:38.016Z",
+    "created_at": "2026-11-23T19:46:45.227Z",
+    "updated_at": "2026-11-23T19:46:45.227Z",
     "notes": "",
     "entity_count": 3,
     "entities": [
@@ -18,7 +18,7 @@
         "type": "domain",
         "value": "sbi-kyc-verify.in",
         "first_seen": "2026-10-10T10:00:00.000Z",
-        "last_seen": "2026-11-23T17:41:38.016Z",
+        "last_seen": "2026-11-23T19:46:45.227Z",
         "risk_score": 100,
         "metadata_json": "{\"cases\":[\"TRC-2026-0001\",\"TRC-2026-0002\",\"TRC-2026-0003\",\"TRC-2026-0007\",\"TRC-2026-0011\",\"TRC-2026-0015\",\"TRC-2026-0016\",\"TRC-2026-0017\",\"TRC-2026-0018\",\"TRC-2026-0019\"],\"suspicious\":false,\"note\":\"classes.dex\"}"
       },
@@ -27,7 +27,7 @@
         "type": "upi",
         "value": "kyc.support@fakebank",
         "first_seen": "2026-10-10T10:00:00.000Z",
-        "last_seen": "2026-11-23T17:41:38.016Z",
+        "last_seen": "2026-11-23T19:46:45.227Z",
         "risk_score": 100,
         "metadata_json": "{\"cases\":[\"TRC-2026-0001\",\"TRC-2026-0002\",\"TRC-2026-0003\",\"TRC-2026-0007\",\"TRC-2026-0011\",\"TRC-2026-0015\",\"TRC-2026-0017\",\"TRC-2026-0018\",\"TRC-2026-0019\"],\"suspicious\":true,\"note\":\"unregistered handle @fakebank\"}"
       },
@@ -35,8 +35,8 @@
         "id": 39,
         "type": "url",
         "value": "http://sbi-kyc-verify.in",
-        "first_seen": "2026-11-23T17:41:38.016Z",
-        "last_seen": "2026-11-23T17:41:38.016Z",
+        "first_seen": "2026-11-23T19:46:45.227Z",
+        "last_seen": "2026-11-23T19:46:45.227Z",
         "risk_score": 95,
         "metadata_json": "{\"cases\":[\"TRC-2026-0019\"],\"suspicious\":false,\"note\":null}"
       }
@@ -205,6 +205,51 @@
               "evidence": [],
               "explanation": "An electricity, gas, water or SIM disconnection is threatened with a payment link. Utilities do not disconnect over a texted link.",
               "category": "coercion"
+            },
+            {
+              "id": "digital-arrest-phrase",
+              "name": "\"Digital arrest\" claim",
+              "weight": 35,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "\"Digital arrest\" is not a legal process. Police and regulators do not arrest people over a call or chat, so the phrase alone is a strong scam signal.",
+              "category": "coercion"
+            },
+            {
+              "id": "digital-arrest",
+              "name": "Authority impersonation plus arrest coercion and payment demand",
+              "weight": 30,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "An agency is named, an arrest/video-call threat is made, and money is demanded. Genuine agencies do not conduct arrests over a call or ask for transfers to verification accounts.",
+              "category": "identity"
+            },
+            {
+              "id": "prize-fee",
+              "name": "Prize claim with a cost or details request",
+              "weight": 30,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Unexpected winnings require a fee, tax or bank details before any payout. That is the payment step of a lottery or reward scam.",
+              "category": "financial"
+            },
+            {
+              "id": "loan-apk",
+              "name": "Loan offer with APK install and deadline or document demand",
+              "weight": 30,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "A loan offer that requires a sideloaded APK plus identity documents or immediate action distributes loan-trojan apps rather than credit.",
+              "category": "malware"
+            },
+            {
+              "id": "delivery-fee",
+              "name": "Parcel fee or address update with a payment link",
+              "weight": 25,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "A courier pretext plus a small fee or address update and a link or UPI ID is the standard delivery-fee scam: the parcel is a pretext for collecting card or UPI details.",
+              "category": "financial"
             }
           ],
           "entities": [
@@ -341,6 +386,24 @@
                     "evidence": [],
                     "explanation": "Reusing a well-known second-level name on a cheap or unfamiliar TLD is a common look-alike strategy.",
                     "category": "identity"
+                  },
+                  {
+                    "id": "brand-lure-tld",
+                    "name": "Brand plus lure word on an abused TLD",
+                    "weight": 25,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "A protected name combined with security or account wording on a cheap TLD is a look-alike registration pattern, even when the brand keyword is not an exact match.",
+                    "category": "identity"
+                  },
+                  {
+                    "id": "lure-word-tld",
+                    "name": "Stacked lure words on an abused TLD",
+                    "weight": 15,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Several login/security words packed into the registrable label of a cheap TLD is a phishing template that does not depend on any brand list.",
+                    "category": "structure"
                   },
                   {
                     "id": "hyphens",
@@ -685,7 +748,7 @@
             ]
           }
         },
-        "created_at": "2026-11-23T17:41:38.016Z"
+        "created_at": "2026-11-23T19:46:45.227Z"
       }
     ],
     "events": [
@@ -694,19 +757,19 @@
         "case_id": "TRC-2026-0019",
         "type": "entities",
         "message": "3 indicators linked (1 new)",
-        "created_at": "2026-11-23T17:41:38.016Z"
+        "created_at": "2026-11-23T19:46:45.227Z"
       },
       {
         "id": 44,
         "case_id": "TRC-2026-0019",
         "type": "created",
         "message": "Case opened from message analysis",
-        "created_at": "2026-11-23T17:41:38.016Z"
+        "created_at": "2026-11-23T19:46:45.227Z"
       }
     ]
   },
-  "generatedAt": "2026-11-23T17:41:38.023Z",
-  "generatedAtIst": "Monday, 23 November 2026 at 11:11:38 pm IST",
+  "generatedAt": "2026-11-23T19:46:45.232Z",
+  "generatedAtIst": "Tuesday, 24 November 2026 at 1:16:45 am IST",
   "analyst": "QA Analyst",
   "analysis": {
     "input": "URGENT! SBI KYC http://sbi-kyc-verify.in pay kyc.support@fakebank",
@@ -867,6 +930,51 @@
         "evidence": [],
         "explanation": "An electricity, gas, water or SIM disconnection is threatened with a payment link. Utilities do not disconnect over a texted link.",
         "category": "coercion"
+      },
+      {
+        "id": "digital-arrest-phrase",
+        "name": "\"Digital arrest\" claim",
+        "weight": 35,
+        "triggered": false,
+        "evidence": [],
+        "explanation": "\"Digital arrest\" is not a legal process. Police and regulators do not arrest people over a call or chat, so the phrase alone is a strong scam signal.",
+        "category": "coercion"
+      },
+      {
+        "id": "digital-arrest",
+        "name": "Authority impersonation plus arrest coercion and payment demand",
+        "weight": 30,
+        "triggered": false,
+        "evidence": [],
+        "explanation": "An agency is named, an arrest/video-call threat is made, and money is demanded. Genuine agencies do not conduct arrests over a call or ask for transfers to verification accounts.",
+        "category": "identity"
+      },
+      {
+        "id": "prize-fee",
+        "name": "Prize claim with a cost or details request",
+        "weight": 30,
+        "triggered": false,
+        "evidence": [],
+        "explanation": "Unexpected winnings require a fee, tax or bank details before any payout. That is the payment step of a lottery or reward scam.",
+        "category": "financial"
+      },
+      {
+        "id": "loan-apk",
+        "name": "Loan offer with APK install and deadline or document demand",
+        "weight": 30,
+        "triggered": false,
+        "evidence": [],
+        "explanation": "A loan offer that requires a sideloaded APK plus identity documents or immediate action distributes loan-trojan apps rather than credit.",
+        "category": "malware"
+      },
+      {
+        "id": "delivery-fee",
+        "name": "Parcel fee or address update with a payment link",
+        "weight": 25,
+        "triggered": false,
+        "evidence": [],
+        "explanation": "A courier pretext plus a small fee or address update and a link or UPI ID is the standard delivery-fee scam: the parcel is a pretext for collecting card or UPI details.",
+        "category": "financial"
       }
     ],
     "entities": [
@@ -1003,6 +1111,24 @@
               "evidence": [],
               "explanation": "Reusing a well-known second-level name on a cheap or unfamiliar TLD is a common look-alike strategy.",
               "category": "identity"
+            },
+            {
+              "id": "brand-lure-tld",
+              "name": "Brand plus lure word on an abused TLD",
+              "weight": 25,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "A protected name combined with security or account wording on a cheap TLD is a look-alike registration pattern, even when the brand keyword is not an exact match.",
+              "category": "identity"
+            },
+            {
+              "id": "lure-word-tld",
+              "name": "Stacked lure words on an abused TLD",
+              "weight": 15,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Several login/security words packed into the registrable label of a cheap TLD is a phishing template that does not depend on any brand list.",
+              "category": "structure"
             },
             {
               "id": "hyphens",
@@ -1502,6 +1628,51 @@
       "evidence": [],
       "explanation": "An electricity, gas, water or SIM disconnection is threatened with a payment link. Utilities do not disconnect over a texted link.",
       "category": "coercion"
+    },
+    {
+      "id": "digital-arrest-phrase",
+      "name": "\"Digital arrest\" claim",
+      "weight": 35,
+      "triggered": false,
+      "evidence": [],
+      "explanation": "\"Digital arrest\" is not a legal process. Police and regulators do not arrest people over a call or chat, so the phrase alone is a strong scam signal.",
+      "category": "coercion"
+    },
+    {
+      "id": "digital-arrest",
+      "name": "Authority impersonation plus arrest coercion and payment demand",
+      "weight": 30,
+      "triggered": false,
+      "evidence": [],
+      "explanation": "An agency is named, an arrest/video-call threat is made, and money is demanded. Genuine agencies do not conduct arrests over a call or ask for transfers to verification accounts.",
+      "category": "identity"
+    },
+    {
+      "id": "prize-fee",
+      "name": "Prize claim with a cost or details request",
+      "weight": 30,
+      "triggered": false,
+      "evidence": [],
+      "explanation": "Unexpected winnings require a fee, tax or bank details before any payout. That is the payment step of a lottery or reward scam.",
+      "category": "financial"
+    },
+    {
+      "id": "loan-apk",
+      "name": "Loan offer with APK install and deadline or document demand",
+      "weight": 30,
+      "triggered": false,
+      "evidence": [],
+      "explanation": "A loan offer that requires a sideloaded APK plus identity documents or immediate action distributes loan-trojan apps rather than credit.",
+      "category": "malware"
+    },
+    {
+      "id": "delivery-fee",
+      "name": "Parcel fee or address update with a payment link",
+      "weight": 25,
+      "triggered": false,
+      "evidence": [],
+      "explanation": "A courier pretext plus a small fee or address update and a link or UPI ID is the standard delivery-fee scam: the parcel is a pretext for collecting card or UPI details.",
+      "category": "financial"
     }
   ],
   "entities": [
@@ -1563,17 +1734,17 @@
       "case_id": "TRC-2026-0019",
       "type": "entities",
       "message": "3 indicators linked (1 new)",
-      "created_at": "2026-11-23T17:41:38.016Z"
+      "created_at": "2026-11-23T19:46:45.227Z"
     },
     {
       "id": 44,
       "case_id": "TRC-2026-0019",
       "type": "created",
       "message": "Case opened from message analysis",
-      "created_at": "2026-11-23T17:41:38.016Z"
+      "created_at": "2026-11-23T19:46:45.227Z"
     }
   ],
   "notes": "",
   "methodology": "Deterministic rule-based analysis; no machine learning used. Every score is the sum of documented rule weights, capped at 100, with the triggering evidence retained verbatim.",
-  "integrityHash": "546ab31f0d0645b89820a54baa6fe7d03e95b2fbe04685e49c98f920fd8870ac"
+  "integrityHash": "05fc398dde719be5bbcff10d94149ff1ce7c7d32dd15e2f3b2860e0524edc7e6"
 }

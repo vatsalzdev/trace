@@ -4,6 +4,7 @@ import { analyzeMessage } from '../shared/message';
 import { analyzeUrl } from '../shared/url';
 import { inspectApk } from '../server/src/apk';
 import { buildApkFixture, type ApkFixtureKind } from '../server/src/sample-apk';
+import { describe, runHeldout } from './heldout/metrics';
 
 interface Metrics {
   tp: number;
@@ -104,6 +105,9 @@ async function main() {
   const urlMetrics = metricsOf(url);
   const messageMetrics = metricsOf(message);
   const apkMetrics = metricsOf(apk.results);
+  const heldout = runHeldout();
+  const heldMessages = describe('Held-out messages', heldout.messages);
+  const heldUrls = describe('Held-out URLs', heldout.urls);
 
   const rows = [
     line('URL engine (static)', urlMetrics),
@@ -160,6 +164,33 @@ async function main() {
     '- The message set is hand-written from known Indian scam scripts, including Hinglish. It is not a random sample of real traffic.',
     '- APK fixtures are synthetic ZIPs built by the generator. No real malware was downloaded or executed.',
     '- Verdict thresholds were not changed. Two input-pattern gaps found by the first run were fixed before this report: comma-grouped amounts (`Rs 8,000`) in the family-money rule, and code-forward requests (`forward the code`) in the credential rule. Remaining failures are left in the lists above.',
+    '- This recall pass added combination rules and visible brand/lure/TLD evidence, not new thresholds. The held-out set was written and scored before those changes.',
+    '- Cause of the missed `axis-secure.xyz` family: `data/brands.json` listed Axis Bank only as "axis bank" and "axisbank", so a bare "axis" label produced no brand or typosquat finding; the URL scored only high-abuse TLD (15) plus path word (10) = 25. "axis" was added to the brand keywords, and a `brand-lure-tld` finding (25) now records the brand, lure word and TLD as visible evidence.',
+    '- Cause of the missed keyword-stuffed hosts: `.online` and `.site` were absent from the high-abuse TLD set, so hosts such as `update-your-kyc-now.online` had no TLD signal. Both were added, and a `lure-word-tld` finding (15) records stacked lure words plus the TLD. Shorteners, thin job lures and demand-free threats remain below threshold by design.',
+    '',
+    '## Main-set change from this recall pass',
+    '',
+    '| Engine | Before: TP/FN (recall) | After: TP/FN (recall) |',
+    '| --- | ---: | ---: |',
+    `| URL engine (static) | 56/6 (0.903) | ${urlMetrics.tp}/${urlMetrics.fn} (${ratio(urlMetrics.tp, urlMetrics.tp + urlMetrics.fn)}) |`,
+    `| Message engine | 21/9 (0.700) | ${messageMetrics.tp}/${messageMetrics.fn} (${ratio(messageMetrics.tp, messageMetrics.tp + messageMetrics.fn)}) |`,
+    `| APK engine (synthetic) | 6/0 (1.000) | ${apkMetrics.tp}/${apkMetrics.fn} (${ratio(apkMetrics.tp, apkMetrics.tp + apkMetrics.fn)}) |`,
+    '',
+    '## Held-out set',
+    '',
+    '25 new cases in `eval/heldout/` (15 messages, 10 URLs) were written and scored before any rule or data change; baseline detail is in `eval/heldout/BASELINE.md`. They are hand-built around the scam mechanics under test, not sampled from real traffic, so a high score here does not measure real-world accuracy.',
+    '',
+    '| Set | Before: flagged/total | Before recall | After: flagged/total | After recall |',
+    '| --- | ---: | ---: | ---: | ---: |',
+    `| Held-out messages | 4/15 | 0.267 | ${heldMessages.count}/${heldMessages.total} | ${(heldMessages.count / heldMessages.total).toFixed(3)} |`,
+    `| Held-out URLs | 9/10 | 0.900 | ${heldUrls.count}/${heldUrls.total} | ${(heldUrls.count / heldUrls.total).toFixed(3)} |`,
+    '',
+    '### Held-out false negatives',
+    ...(heldMessages.misses.length || heldUrls.misses.length
+      ? [...heldMessages.misses, ...heldUrls.misses]
+      : ['- none']),
+    '',
+    'The held-out set contains no benign labels, so its false-positive count is always 0; the main sets above are the false-positive check.',
     '',
   ].join('\n');
 

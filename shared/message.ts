@@ -1,18 +1,28 @@
 import {
   ACCIDENTAL_CODE_PATTERNS,
   APK_PATTERNS,
+  ARREST_THREAT_PATTERNS,
+  AUTHORITY_IDENTITY_PATTERNS,
   AUTHORITY_PATTERNS,
   BRANDS,
   CREDENTIAL_PATTERNS,
+  DEADLINE_PATTERNS,
+  DELIVERY_FEE_PATTERNS,
+  DELIVERY_PATTERNS,
+  DETAILS_REQUEST_PATTERNS,
   EMAIL_DOMAINS,
   FAMILY_MONEY_PATTERNS,
   FAMILY_STORY_PATTERNS,
+  FEE_TAX_PATTERNS,
   JOB_EARNING_PATTERNS,
   JOB_PATTERNS,
   KNOWN_UPI_HANDLES,
   KYC_PATTERNS,
+  LOAN_DOCUMENT_PATTERNS,
+  LOAN_PATTERNS,
   PAYMENT_PATTERNS,
   PRIZE_PATTERNS,
+  TRANSFER_DEMAND_PATTERNS,
   URGENCY_PATTERNS,
   UTILITY_PATTERNS,
 } from './data';
@@ -224,6 +234,11 @@ function rule(
  */
 const SCAM_TYPE_RULES: { id: string; type: ScamType }[] = [
   { id: 'family-impersonation', type: 'family-impersonation' },
+  { id: 'digital-arrest', type: 'digital-arrest' },
+  { id: 'digital-arrest-phrase', type: 'digital-arrest' },
+  { id: 'prize-fee', type: 'delivery-prize' },
+  { id: 'loan-apk', type: 'apk-loan' },
+  { id: 'delivery-fee', type: 'delivery-prize' },
   { id: 'accidental-code', type: 'accidental-code' },
   { id: 'job-scam', type: 'job-scam' },
   { id: 'apk', type: 'apk-loan' },
@@ -292,6 +307,17 @@ export function analyzeMessage(text: string): MessageAnalysis {
     /(?:electricity|power|gas|water|sim|mobile|broadband|dth|bijli|paani)/i.test(input);
   const utilityThreat = utilityDisconnect || (/\btonight\b/i.test(input) && /\bpay\b/i.test(input) && /\blink\b/i.test(input));
 
+  const authorityId = collectPatterns(AUTHORITY_IDENTITY_PATTERNS, input);
+  const arrestThreat = collectPatterns(ARREST_THREAT_PATTERNS, input);
+  const transferDemand = collectPatterns(TRANSFER_DEMAND_PATTERNS, input);
+  const feeTax = collectPatterns(FEE_TAX_PATTERNS, input);
+  const detailsRequest = collectPatterns(DETAILS_REQUEST_PATTERNS, input);
+  const loan = collectPatterns(LOAN_PATTERNS, input);
+  const loanDocuments = collectPatterns(LOAN_DOCUMENT_PATTERNS, input);
+  const deadline = collectPatterns(DEADLINE_PATTERNS, input);
+  const delivery = collectPatterns(DELIVERY_PATTERNS, input);
+  const deliveryFee = collectPatterns(DELIVERY_FEE_PATTERNS, input);
+
   const brandHits: { brand: (typeof BRANDS)[number]; keyword: string }[] = [];
   for (const brand of BRANDS) {
     for (const keyword of brand.keywords) {
@@ -322,6 +348,11 @@ export function analyzeMessage(text: string): MessageAnalysis {
   const paymentTriggered = upis.length > 0 || paymentWords.length > 0 || entities.some((e) => e.type === 'account');
   const credentialTriggered = credential.length > 0;
   const brandTriggered = brandHits.length > 0 && brandUrls.length > 0;
+  const digitalArrest =
+    authorityId.length > 0 && arrestThreat.length > 0 && (paymentWords.length > 0 || transferDemand.length > 0);
+  const prizeFee = prize.length > 0 && (feeTax.length > 0 || detailsRequest.length > 0);
+  const loanApk = loan.length > 0 && apkWords.length > 0 && (loanDocuments.length > 0 || deadline.length > 0);
+  const deliveryFeeScam = delivery.length > 0 && deliveryFee.length > 0 && (urlAnalyses.length > 0 || upis.length > 0);
 
   const rules: Rule[] = [
     rule(
@@ -470,6 +501,69 @@ export function analyzeMessage(text: string): MessageAnalysis {
       'An electricity, gas, water or SIM disconnection is threatened with a payment link. Utilities do not disconnect over a texted link.',
       utilityThreat,
       'coercion',
+    ),
+    rule(
+      'digital-arrest-phrase',
+      '"Digital arrest" claim',
+      35,
+      ['"digital arrest" appears in the message'],
+      '"Digital arrest" is not a legal process. Police and regulators do not arrest people over a call or chat, so the phrase alone is a strong scam signal.',
+      /\bdigital\s+arrest\b/i.test(input),
+      'coercion',
+    ),
+    rule(
+      'digital-arrest',
+      'Authority impersonation plus arrest coercion and payment demand',
+      30,
+      [
+        ...authorityId.map((a) => `authority "${a}"`),
+        ...arrestThreat.map((t) => `threat "${t}"`),
+        ...transferDemand.map((t) => `money demand "${t}"`),
+      ],
+      'An agency is named, an arrest/video-call threat is made, and money is demanded. Genuine agencies do not conduct arrests over a call or ask for transfers to verification accounts.',
+      digitalArrest,
+      'identity',
+    ),
+    rule(
+      'prize-fee',
+      'Prize claim with a cost or details request',
+      30,
+      [
+        ...prize.map((p) => `prize "${p}"`),
+        ...feeTax.map((f) => `cost "${f}"`),
+        ...detailsRequest.map((d) => `details request "${d}"`),
+      ],
+      'Unexpected winnings require a fee, tax or bank details before any payout. That is the payment step of a lottery or reward scam.',
+      prizeFee,
+      'financial',
+    ),
+    rule(
+      'loan-apk',
+      'Loan offer with APK install and deadline or document demand',
+      30,
+      [
+        ...loan.map((l) => `loan "${l}"`),
+        ...apkWords.map((a) => `install "${a}"`),
+        ...loanDocuments.map((d) => `document "${d}"`),
+        ...deadline.map((d) => `deadline "${d}"`),
+      ],
+      'A loan offer that requires a sideloaded APK plus identity documents or immediate action distributes loan-trojan apps rather than credit.',
+      loanApk,
+      'malware',
+    ),
+    rule(
+      'delivery-fee',
+      'Parcel fee or address update with a payment link',
+      25,
+      [
+        ...delivery.map((d) => `parcel "${d}"`),
+        ...deliveryFee.map((f) => `fee "${f}"`),
+        ...urlAnalyses.map((u) => `link ${u.span.value}`),
+        ...upis.map((u) => `UPI ${u.value}`),
+      ],
+      'A courier pretext plus a small fee or address update and a link or UPI ID is the standard delivery-fee scam: the parcel is a pretext for collecting card or UPI details.',
+      deliveryFeeScam,
+      'financial',
     ),
   ];
 

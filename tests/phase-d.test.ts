@@ -127,6 +127,37 @@ test('packed APK is INCONCLUSIVE, never NO_INDICATORS', async () => {
   assert.equal(analysis.verdict.confidence, 'LOW');
 });
 
+test('multi-signal scam rules fire with visible evidence and skip benign controls', () => {
+  const cases: Array<[string, string]> = [
+    ['digital-arrest', 'CBI officer here. A money laundering case is registered. Stay on the video call and transfer the clearance amount now.'],
+    ['prize-fee', 'You won a lucky draw. Pay Rs 990 tax and send your bank details to claim.'],
+    ['loan-apk', 'Loan sanctioned. Install the APK within 20 minutes and upload your Aadhaar.'],
+    ['delivery-fee', 'Your courier address is incomplete. Pay Rs 29 redelivery fee here http://parcel-redelivery.xyz/update'],
+  ];
+  for (const [id, text] of cases) {
+    const result = analyzeMessage(text);
+    const rule = result.rules.find((r) => r.id === id);
+    assert.ok(rule?.triggered, `${id} did not fire: ${result.rules.filter((r) => r.triggered).map((r) => r.id).join(',')}`);
+    assert.ok((rule?.evidence.length ?? 0) > 0, `${id} has no evidence`);
+    assert.ok(result.verdict.score >= VERDICT_CONFIG.suspiciousScore, `${id} scored ${result.verdict.score}`);
+  }
+  const benign = analyzeMessage('Your parcel is out for delivery today. No payment is needed. Track it in the official app.');
+  for (const id of cases.map(([id]) => id)) {
+    assert.equal(benign.rules.find((r) => r.id === id)?.triggered, false, `${id} fired on a benign notice`);
+  }
+});
+
+test('brand/lure/TLD URL finding fires with evidence and skips the official host', () => {
+  const result = analyzeUrl('https://axis-secure.xyz/login');
+  const brandLure = result.heuristics.find((h) => h.id === 'brand-lure-tld');
+  assert.ok(brandLure?.triggered, 'brand-lure-tld did not fire on axis-secure.xyz');
+  assert.ok(brandLure.evidence.some((e) => /axis/i.test(e)), `no brand evidence: ${brandLure.evidence.join(' | ')}`);
+  assert.ok(brandLure.evidence.some((e) => /secure/i.test(e)), `no lure evidence: ${brandLure.evidence.join(' | ')}`);
+  assert.ok(result.verdict.score >= VERDICT_CONFIG.suspiciousScore, `URL scored ${result.verdict.score}`);
+  const official = analyzeUrl('https://www.axisbank.com/secure/login');
+  assert.equal(official.heuristics.find((h) => h.id === 'brand-lure-tld')?.triggered, false);
+});
+
 test('every NO_INDICATORS result carries the exact disclaimer', async () => {
   const url = analyzeUrl('https://www.google.com');
   const message = analyzeMessage('Your OTP is 123456. Do not share it with anyone.');

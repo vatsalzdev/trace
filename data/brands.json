@@ -2,7 +2,7 @@
   { "name": "SBI", "keywords": ["sbi", "state bank", "onlinesbi", "yono"], "domains": ["sbi.co.in", "onlinesbi.sbi", "sbiyono.sbi", "sbicard.com"], "sector": "bank", "appPackages": ["com.sbi.lotusintouch", "com.sbi.SBIFreedomPlus"] },
   { "name": "HDFC Bank", "keywords": ["hdfc"], "domains": ["hdfcbank.com", "hdfc.com", "hdfcbank.net"], "sector": "bank", "appPackages": ["com.snapwork.hdfc"] },
   { "name": "ICICI Bank", "keywords": ["icici"], "domains": ["icicibank.com", "icicibank.co.in"], "sector": "bank", "appPackages": ["com.icicibank.imobile"] },
-  { "name": "Axis Bank", "keywords": ["axis bank", "axisbank"], "domains": ["axisbank.com", "axisbank.co.in"], "sector": "bank", "appPackages": ["com.axis.mobile"] },
+  { "name": "Axis Bank", "keywords": ["axis bank", "axisbank", "axis"], "domains": ["axisbank.com", "axisbank.co.in"], "sector": "bank", "appPackages": ["com.axis.mobile"] },
   { "name": "Punjab National Bank", "keywords": ["pnb", "punjab national"], "domains": ["pnbindia.in", "pnb.co.in"], "sector": "bank" },
   { "name": "Kotak Bank", "keywords": ["kotak"], "domains": ["kotak.com", "kotakbank.com"], "sector": "bank" },
   { "name": "Bank of Baroda", "keywords": ["bank of baroda", "bob"], "domains": ["bankofbaroda.in", "bankofbaroda.com"], "sector": "bank" },

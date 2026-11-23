@@ -42,6 +42,7 @@ export const SUSPICIOUS_TLDS = new Set([
   'monster', 'rest', 'quest', 'cyou', 'bond', 'work', 'support', 'help', 'surf',
   'bar', 'beauty', 'casa', 'cam', 'life', 'makeup', 'skin', 'today', 'uno', 'wtf',
   'tk', 'ml', 'ga', 'cf', 'gq', 'zip', 'mov', 'country', 'download', 'stream',
+  'online', 'site',
 ]);
 
 /** Small public-suffix subset covering the domains this product sees. */
@@ -131,6 +132,7 @@ export const PAYMENT_PATTERNS = [
 
 export const APK_PATTERNS = [
   /\.apk\b/gi,
+  /\bapk\b/gi,
   /\binstall\s+(?:the\s+)?app\b/gi,
   /\bdownload\s+(?:the\s+)?app\b/gi,
   /\bupdate\s+(?:the\s+)?app\b/gi,
@@ -205,6 +207,84 @@ export const UTILITY_PATTERNS = [
   /\bwill\s+be\s+(?:disconnected|cut\s+off)\b/gi,
   /\b(?:bijli|paani|gas)\s+(?:kat|band)\s+(?:jayegi|hogi|jaega)\b/gi,
   /\bpay\s+via\s+this\s+link\b/gi,
+];
+
+
+/* Combination patterns for multi-signal scams. Each half is generic; only the
+ * combination raises a rule, so an isolated word cannot flag a benign message. */
+
+/** Government / police identity used in digital-arrest coercion. */
+export const AUTHORITY_IDENTITY_PATTERNS = [
+  /\bcbi\b/gi,
+  /\bcentral\s+bureau\b/gi,
+  /\bpolice\b/gi,
+  /\bcustoms\b/gi,
+  /\bed\b/gi,
+  /\benforcement\s+directorate\b/gi,
+  /\btrai\b/gi,
+  /\bcyber\s+cell\b/gi,
+];
+
+/** Threats used to keep the victim on a call and suppress verification. */
+export const ARREST_THREAT_PATTERNS = [
+  /\bdigital\s+arrest\b/gi,
+  /\barrest(?:ed)?\b/gi,
+  /\bmoney\s+laundering\b/gi,
+  /\bvideo\s+(?:call|conference)\b/gi,
+  /\bdo\s+not\s+(?:tell|inform)\b/gi,
+  /\bstay\s+on\s+(?:the\s+)?call\b/gi,
+  /\bremain\s+on\s+(?:the\s+)?call\b/gi,
+  /\bna\s+batayein\b/gi,
+];
+
+/** Money movement phrasing not already covered by PAYMENT_PATTERNS. */
+export const TRANSFER_DEMAND_PATTERNS = [
+  /\b(?:safe|government|department)\s+account\b/gi,
+  /\bmove\s+(?:the\s+)?funds\b/gi,
+  /\b(?:processing|clearance|verification|release)\s+(?:fee|charge|amount)\b/gi,
+  /\bbhej(?:o|ein|do)\b/gi,
+];
+
+/** Lottery/prize costs and identity capture. */
+export const FEE_TAX_PATTERNS = [
+  /\b(?:fee|fees|tax|handling|processing|clearance)\b/gi,
+  /\bRs\.?\s?[\d,]+\b/gi,
+  /\btax\s+bhejo\b/gi,
+];
+export const DETAILS_REQUEST_PATTERNS = [
+  /\b(?:send|share|provide|submit)\b[^.!?]{0,50}\b(?:bank|account|aadhaar|pan|card|kyc)?\s*details?\b/gi,
+  /\bdetails?\s+bhej(?:o|ein|dena)\b/gi,
+  /\bsend\s+your\s+(?:bank|aadhaar|pan|card)\b/gi,
+];
+
+/** Loan-app installation and the deadline or document demand that makes it a scam. */
+export const LOAN_PATTERNS = [
+  /\bloan\b/gi,
+  /\bpre[-\s]?sanctioned\b/gi,
+  /\b(?:instant|quick|personal)\s+(?:cash|money)\b/gi,
+];
+export const LOAN_DOCUMENT_PATTERNS = [
+  /\b(?:aadhaar|aadhar|pan|salary\s+slip|photo|id\s+proof)\b/gi,
+  /\bphoto\s+bhejo\b/gi,
+];
+export const DEADLINE_PATTERNS = [
+  /\bwithin\s+\d+\s*(?:minutes?|hours?|hrs?)\b/gi,
+  /\b\d+\s*(?:minutes?|hours?)\s*(?:mein|left|remaining)\b/gi,
+  /\b(?:today|now|immediately|abhi|turant)\b/gi,
+];
+
+/** Delivery-fee pretext: a parcel plus an address/fee demand and a payment route. */
+export const DELIVERY_PATTERNS = [
+  /\b(?:parcel|courier|package|consignment|shipment)\b/gi,
+  /\bdelivery\s+(?:failed|pending|held)\b/gi,
+  /\bparcel\s+ruk\b/gi,
+];
+export const DELIVERY_FEE_PATTERNS = [
+  /\b(?:redelivery|delivery|customs|handling|clearance)\s+(?:fee|charge)\b/gi,
+  /\b(?:fee|charge|fees)\b/gi,
+  /\b(?:update|confirm)\s+(?:your\s+)?address\b/gi,
+  /\baddress\s+(?:update|incomplete)\b/gi,
+  /\bRs\.?\s?\d{1,4}\b/gi,
 ];
 
 

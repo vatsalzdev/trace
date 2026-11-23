@@ -287,6 +287,45 @@ export function analyzeUrl(input: string): UrlAnalysis {
     'identity',
   );
 
+  const registrableLabel = breakdown.domain.toLowerCase();
+  const labelLureWords = [...new Set(SUSPICIOUS_PATH_WORDS.filter((word) => registrableLabel.includes(word)))];
+  const riskyTld = SUSPICIOUS_TLDS.has(breakdown.tld.split('.').pop() ?? '');
+  const brandInLabel = BRANDS.find(
+    (brand) =>
+      !isOfficialHost(host, brand) &&
+      brand.keywords.some((keyword) => {
+        const compact = keyword.replace(/\s+/g, '');
+        return compact.length >= 3 && registrableLabel.includes(compact);
+      }),
+  );
+  add(
+    'brand-lure-tld',
+    'Brand plus lure word on an abused TLD',
+    25,
+    Boolean(brandInLabel && labelLureWords.length > 0 && riskyTld && !officialAny),
+    [
+      brandInLabel
+        ? `"${brandInLabel.keywords.find((k) => registrableLabel.includes(k.replace(/\s+/g, ''))) ?? brandInLabel.keywords[0]}" (${brandInLabel.name}) in label "${registrableLabel}"`
+        : '',
+      `lure word "${labelLureWords[0] ?? ''}" in the same label`,
+      `TLD ".${breakdown.tld}" is on the high-abuse list`,
+    ],
+    'A protected name combined with security or account wording on a cheap TLD is a look-alike registration pattern, even when the brand keyword is not an exact match.',
+    'identity',
+  );
+  add(
+    'lure-word-tld',
+    'Stacked lure words on an abused TLD',
+    15,
+    labelLureWords.length >= 2 && riskyTld && !officialAny,
+    [
+      `label "${registrableLabel}" contains ${labelLureWords.length} lure words: ${labelLureWords.map((w) => `"${w}"`).join(', ')}`,
+      `TLD ".${breakdown.tld}" is on the high-abuse list`,
+    ],
+    'Several login/security words packed into the registrable label of a cheap TLD is a phishing template that does not depend on any brand list.',
+    'structure',
+  );
+
   const hyphenCount = (host.match(/-/g) ?? []).length;
   add(
     'hyphens',
