@@ -374,9 +374,9 @@ test('09 URL enrichment with forced offline server, then normal server', async (
     await page.goto('/app/url');
     await page.getByLabel('URL to analyse').fill('http://sbi-kyc-verify.in');
     await page.getByRole('button', { name: 'Analyse URL' }).click();
-    await expect(page.getByText('cached', { exact: true }).first()).toBeVisible({ timeout: 15_000 });
-    console.log('[EVIDENCE] offline server returned visible cached badge');
-    await shot(page, 'url-offline-cached');
+    await expect(page.getByTestId('data-status-badge').filter({ hasText: 'demo fixture' }).first()).toBeVisible({ timeout: 15_000 });
+    console.log('[EVIDENCE] offline server returned visible demo-fixture badge');
+    await shot(page, 'url-offline-fixture');
     await page.unroute('**/api/**', route);
   } finally {
     await stopOfflineServer(offline);
@@ -385,8 +385,8 @@ test('09 URL enrichment with forced offline server, then normal server', async (
   await page.reload();
   await page.getByLabel('URL to analyse').fill('http://sbi-kyc-verify.in');
   await page.getByRole('button', { name: 'Analyse URL' }).click();
-  await expect(page.getByText(/^(live|cached)$/).first()).toBeVisible({ timeout: 15_000 });
-  console.log('[EVIDENCE] normal server returned live/cached badge');
+  await expect(page.getByTestId('data-status-badge').filter({ hasText: /^(live data|demo fixture|no network data)$/ }).first()).toBeVisible({ timeout: 15_000 });
+  console.log('[EVIDENCE] normal server returned a data-status badge');
   await shot(page, 'url-normal-badge');
   await noConsoleErrors(errors);
 });

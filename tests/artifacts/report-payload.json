@@ -1,5 +1,5 @@
 {
-  "reportId": "RPT-2026-0019-MWTJLRLS",
+  "reportId": "RPT-2026-0019-MWTJYR28",
   "case": {
     "id": "TRC-2026-0019",
     "title": "QA report case",
@@ -8,8 +8,8 @@
     "risk_score": 95,
     "source_type": "message",
     "raw_input": "URGENT! SBI KYC http://sbi-kyc-verify.in pay kyc.support@fakebank",
-    "created_at": "2026-11-23T17:31:32.166Z",
-    "updated_at": "2026-11-23T17:31:32.166Z",
+    "created_at": "2026-11-23T17:41:38.016Z",
+    "updated_at": "2026-11-23T17:41:38.016Z",
     "notes": "",
     "entity_count": 3,
     "entities": [
@@ -18,7 +18,7 @@
         "type": "domain",
         "value": "sbi-kyc-verify.in",
         "first_seen": "2026-10-10T10:00:00.000Z",
-        "last_seen": "2026-11-23T17:31:32.166Z",
+        "last_seen": "2026-11-23T17:41:38.016Z",
         "risk_score": 100,
         "metadata_json": "{\"cases\":[\"TRC-2026-0001\",\"TRC-2026-0002\",\"TRC-2026-0003\",\"TRC-2026-0007\",\"TRC-2026-0011\",\"TRC-2026-0015\",\"TRC-2026-0016\",\"TRC-2026-0017\",\"TRC-2026-0018\",\"TRC-2026-0019\"],\"suspicious\":false,\"note\":\"classes.dex\"}"
       },
@@ -27,7 +27,7 @@
         "type": "upi",
         "value": "kyc.support@fakebank",
         "first_seen": "2026-10-10T10:00:00.000Z",
-        "last_seen": "2026-11-23T17:31:32.166Z",
+        "last_seen": "2026-11-23T17:41:38.016Z",
         "risk_score": 100,
         "metadata_json": "{\"cases\":[\"TRC-2026-0001\",\"TRC-2026-0002\",\"TRC-2026-0003\",\"TRC-2026-0007\",\"TRC-2026-0011\",\"TRC-2026-0015\",\"TRC-2026-0017\",\"TRC-2026-0018\",\"TRC-2026-0019\"],\"suspicious\":true,\"note\":\"unregistered handle @fakebank\"}"
       },
@@ -35,8 +35,8 @@
         "id": 39,
         "type": "url",
         "value": "http://sbi-kyc-verify.in",
-        "first_seen": "2026-11-23T17:31:32.166Z",
-        "last_seen": "2026-11-23T17:31:32.166Z",
+        "first_seen": "2026-11-23T17:41:38.016Z",
+        "last_seen": "2026-11-23T17:41:38.016Z",
         "risk_score": 95,
         "metadata_json": "{\"cases\":[\"TRC-2026-0019\"],\"suspicious\":false,\"note\":null}"
       }
@@ -685,7 +685,7 @@
             ]
           }
         },
-        "created_at": "2026-11-23T17:31:32.166Z"
+        "created_at": "2026-11-23T17:41:38.016Z"
       }
     ],
     "events": [
@@ -694,19 +694,19 @@
         "case_id": "TRC-2026-0019",
         "type": "entities",
         "message": "3 indicators linked (1 new)",
-        "created_at": "2026-11-23T17:31:32.166Z"
+        "created_at": "2026-11-23T17:41:38.016Z"
       },
       {
         "id": 44,
         "case_id": "TRC-2026-0019",
         "type": "created",
         "message": "Case opened from message analysis",
-        "created_at": "2026-11-23T17:31:32.166Z"
+        "created_at": "2026-11-23T17:41:38.016Z"
       }
     ]
   },
-  "generatedAt": "2026-11-23T17:31:32.174Z",
-  "generatedAtIst": "Monday, 23 November 2026 at 11:01:32 pm IST",
+  "generatedAt": "2026-11-23T17:41:38.023Z",
+  "generatedAtIst": "Monday, 23 November 2026 at 11:11:38 pm IST",
   "analyst": "QA Analyst",
   "analysis": {
     "input": "URGENT! SBI KYC http://sbi-kyc-verify.in pay kyc.support@fakebank",
@@ -1563,17 +1563,17 @@
       "case_id": "TRC-2026-0019",
       "type": "entities",
       "message": "3 indicators linked (1 new)",
-      "created_at": "2026-11-23T17:31:32.166Z"
+      "created_at": "2026-11-23T17:41:38.016Z"
     },
     {
       "id": 44,
       "case_id": "TRC-2026-0019",
       "type": "created",
       "message": "Case opened from message analysis",
-      "created_at": "2026-11-23T17:31:32.166Z"
+      "created_at": "2026-11-23T17:41:38.016Z"
     }
   ],
   "notes": "",
   "methodology": "Deterministic rule-based analysis; no machine learning used. Every score is the sum of documented rule weights, capped at 100, with the triggering evidence retained verbatim.",
-  "integrityHash": "b70244cc0a1aa6253e7ad1ad7a648e4334bf4f9ecad27ae3a652c51a6473e392"
+  "integrityHash": "546ab31f0d0645b89820a54baa6fe7d03e95b2fbe04685e49c98f920fd8870ac"
 }

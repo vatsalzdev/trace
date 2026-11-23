@@ -15,7 +15,8 @@
     "blocklist:import": "tsx server/scripts/import-blocklist.ts",
     "preview": "npm run preview -w client",
     "start": "npm run start -w server",
-    "test:api": "node --test tests/api.test.mjs",
+    "test:api": "node --test tests/api.test.mjs && tsx --test tests/phase-d.test.ts",
+    "eval": "tsx eval/run.ts",
     "test:e2e": "playwright test",
     "test:contrast": "node scripts/check-contrast.mjs"
   },

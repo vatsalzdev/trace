@@ -91,6 +91,7 @@ export const CREDENTIAL_PATTERNS = [
   /\b(?:otp|pin|cvv|password|aadhaar|pan)\b(?=[^.!?]{0,40}\b(?:share|send|enter|provide|verify|update|submit)\b)/gi,
   /\b(?:share|send|enter|provide|verify|update|submit)\b[^.!?]{0,40}\b(?:otp|pin|cvv|password|aadhaar|pan)\b/gi,
   /\b(?:card\s+)?(?:pin|cvv|password)\b/gi,
+  /\b(?:forward|send|share)\s+(?:me\s+)?(?:the\s+|your\s+)?(?:verification\s+)?(?:6[-\s]?digit\s+)?(?:code|otp)\b/gi,
 ];
 
 export const AUTHORITY_PATTERNS = [
@@ -160,7 +161,7 @@ export const FAMILY_MONEY_PATTERNS = [
   /\b(?:need|require)\s+(?:some\s+)?(?:money|cash|funds)\b/gi,
   /\bpaise\s+bhej(?:o|do|na|dena)\b/gi,
   /\bpaisa\s+bhej(?:o|do|na|dena)\b/gi,
-  /\b(?:rs\.?|₹)\s?\d{2,6}\b/gi,
+  /\b(?:rs\.?|₹)\s?\d[\d,]{1,7}\b/gi,
   /\burgent(?:ly)?\b/gi,
   /\babhi\b/gi,
   /\bturant\b/gi,

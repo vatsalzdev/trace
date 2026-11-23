@@ -284,7 +284,7 @@ export default function ApkInspector() {
               <div className="flex flex-wrap items-start justify-between gap-5">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <Label>Package verdict</Label>
+                    <Label>Package score</Label>
                     <span className="mono rounded border border-line px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.1em] text-ink-3">
                       manifest {analysis.manifestFormat}
                     </span>

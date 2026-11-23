@@ -349,7 +349,7 @@ export function buildReportPdf(payload: ReportPayload): jsPDF {
   heading('09', 'Methodology & integrity');
   body(payload.methodology);
   body(
-    'TRACE applies deterministic pattern extraction and weighted rules. Each score is the sum of triggered weights, capped at 100, with the exact matched evidence retained. Network enrichment (RDAP, DNS, TLS, redirects) uses a four-second budget per source and falls back to documented local fixtures; the report states whether live or cached data was used.',
+    'TRACE applies deterministic pattern extraction and weighted rules. Each score is the sum of triggered weights, capped at 100, with the exact matched evidence retained. The verdict (MALICIOUS, SUSPICIOUS, NO_INDICATORS or INCONCLUSIVE) comes from one shared function. Network enrichment (RDAP, DNS, TLS, redirects) uses a four-second budget per source. If no data exists for a domain, the fields are left empty and a skipped check is recorded; the report states whether data was live, a demo fixture, or unavailable. Nothing is invented.',
     8.8,
   );
   const coverage = analysis?.verdict?.coverage;
@@ -365,6 +365,10 @@ export function buildReportPdf(payload: ReportPayload): jsPDF {
   if (verdictLabel === 'NO_INDICATORS' && verdict?.disclaimer) {
     body(verdict.disclaimer, 8.4);
   }
+  body(
+    'Limitations — TRACE is a static analyser. It does not detect zero-day campaigns, heavily packed or encrypted malware (these are capped at INCONCLUSIVE), native-code-only payloads, dynamic behaviour (no code is executed), QR/image/voice scams (no OCR or media analysis), or patient social engineering that matches no rule. A NO_INDICATORS result means these checks found nothing; it is not a guarantee of safety.',
+    8.4,
+  );
   ensure(46);
   doc.setFont('courier', 'normal');
   doc.setFontSize(7.2);

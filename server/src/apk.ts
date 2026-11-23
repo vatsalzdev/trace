@@ -410,7 +410,7 @@ export async function inspectApk(buffer: Buffer, fileName = 'upload.apk'): Promi
   const stringBlob = strings.join('\n');
   const methodNames = new Set(dexMethods.map((m) => m.name));
   const smsSendMethods = ['sendTextMessage', 'sendMultipartTextMessage', 'sendDataMessage'];
-  const hasSmsSendApi = smsSendMethods.some((name) => methodNames.has(name));
+  const hasSmsSendApi = smsSendMethods.some((name) => methodNames.has(name) || stringBlob.includes(name));
   const hasSmsReadApi =
     /content:\/\/sms|Telephony\.Sms|SMS_RECEIVED|abortBroadcast|sms\/inbox/i.test(stringBlob) ||
     methodNames.has('abortBroadcast') ||

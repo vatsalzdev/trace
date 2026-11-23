@@ -256,7 +256,7 @@ export default function UrlIntelligence() {
               <div className="mt-4 flex flex-wrap items-start justify-between gap-5">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <Label>Structural verdict</Label>
+                    <Label>Structural score</Label>
                     {enrichment && (
                       <span
                         className={cn(
@@ -546,7 +546,7 @@ export default function UrlIntelligence() {
                   <div>
                     <div className="text-[11.5px] text-ink-2">Low · 0–29</div>
                     <p className="mt-0.5 text-[10.5px] leading-relaxed text-ink-3">
-                      No structural rule fired. This is not a certification that the destination is safe.
+                      No structural rule fired. This is not a certification of safety.
                     </p>
                   </div>
                 </div>

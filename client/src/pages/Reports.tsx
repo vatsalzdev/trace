@@ -233,7 +233,7 @@ export default function Reports() {
             <Label>Honest output</Label>
             <p className="mt-2 text-[11px] leading-relaxed text-ink-3">
               The PDF never claims certainty. It records what fired, the exact evidence, the weights and the resulting sum.
-              A negative result is stated as a negative result, not a clean bill of health.
+              A negative result is stated as a negative result, not a guarantee of safety.
             </p>
           </Card>
         </div>

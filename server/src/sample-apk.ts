@@ -139,11 +139,11 @@ net.one97.paytm
 com.google.android.apps.nbu.paisa.user
 `;
 
-function dexBlob(): Buffer {
+function dexBlob(strings = DEX_STRINGS): Buffer {
   const header = Buffer.from('dex\n035\0', 'latin1');
   const body = Buffer.alloc(2048);
   for (let i = 0; i < body.length; i++) body[i] = (i * 31 + 7) & 0xff;
-  return Buffer.concat([header, Buffer.from(DEX_STRINGS, 'latin1'), body]);
+  return Buffer.concat([header, Buffer.from(strings, 'latin1'), body]);
 }
 
 function fakeCert(): Buffer {
@@ -196,3 +196,198 @@ export async function buildSampleApk(): Promise<Buffer> {
 
   return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', platform: 'DOS' });
 }
+
+/* ------------------------------------------------------------------ */
+/* Phase D — labelled synthetic fixtures for the evaluation runner.    */
+/* ------------------------------------------------------------------ */
+
+export type ApkFixtureKind =
+  | 'benign'
+  | 'sms-reader'
+  | 'overlay-only'
+  | 'banker-triad'
+  | 'dropper'
+  | 'packed-like'
+  | 'debug-signed'
+  | 'impersonator';
+
+interface FixtureSpec {
+  name: string;
+  packageName: string;
+  label: string;
+  permissions: string[];
+  debuggable: boolean;
+  cleartext: boolean;
+  launcher: boolean;
+  dexStrings: string;
+  assets?: Record<string, string>;
+  packerLib?: boolean;
+  nestedApk?: boolean;
+  cert: 'normal' | 'debug' | 'none';
+}
+
+const FIXTURES: Record<ApkFixtureKind, FixtureSpec> = {
+  benign: {
+    name: 'com.trace.notes',
+    packageName: 'com.trace.notes',
+    label: 'Trace Notes',
+    permissions: ['android.permission.INTERNET'],
+    debuggable: false,
+    cleartext: false,
+    launcher: true,
+    dexStrings: 'Lcom/trace/notes/MainActivity;\nLcom/trace/notes/NoteStore;\nsaveNote\nloadNote',
+    cert: 'normal',
+  },
+  'sms-reader': {
+    name: 'com.trace.smsreader',
+    packageName: 'com.trace.smsreader',
+    label: 'SMS Backup Utility',
+    permissions: ['android.permission.READ_SMS', 'android.permission.RECEIVE_SMS', 'android.permission.INTERNET'],
+    debuggable: false,
+    cleartext: false,
+    launcher: true,
+    dexStrings: 'Lcom/trace/smsreader/MainActivity;\ncontent://sms\nabortBroadcast\nsendTextMessage\nTelephony.Sms',
+    cert: 'normal',
+  },
+  'overlay-only': {
+    name: 'com.trace.overlay',
+    packageName: 'com.trace.overlay',
+    label: 'Theme Pack',
+    permissions: ['android.permission.SYSTEM_ALERT_WINDOW', 'android.permission.INTERNET'],
+    debuggable: false,
+    cleartext: true,
+    launcher: true,
+    dexStrings: 'Lcom/trace/overlay/ThemeService;\nTYPE_APPLICATION_OVERLAY\naddView\nhttp://185.62.190.44/overlay',
+    cert: 'normal',
+  },
+  'banker-triad': {
+    name: 'com.trace.banker',
+    packageName: 'com.trace.banker',
+    label: 'Secure Banking Helper',
+    permissions: [
+      'android.permission.READ_SMS',
+      'android.permission.RECEIVE_SMS',
+      'android.permission.SYSTEM_ALERT_WINDOW',
+      'android.permission.BIND_ACCESSIBILITY_SERVICE',
+      'android.permission.INTERNET',
+    ],
+    debuggable: false,
+    cleartext: true,
+    launcher: true,
+    dexStrings: 'Lcom/trace/banker/OverlayService;\ncontent://sms\nsendTextMessage\nTYPE_APPLICATION_OVERLAY\nhttp://185.62.190.44/collect',
+    cert: 'normal',
+  },
+  dropper: {
+    name: 'com.trace.dropper',
+    packageName: 'com.trace.dropper',
+    label: 'System Update',
+    permissions: ['android.permission.REQUEST_INSTALL_PACKAGES', 'android.permission.INTERNET'],
+    debuggable: false,
+    cleartext: false,
+    launcher: true,
+    dexStrings: 'Lcom/trace/dropper/MainActivity;\nDexClassLoader\nPathClassLoader\nhttp://185.62.190.44/stage2',
+    nestedApk: true,
+    cert: 'normal',
+  },
+  'packed-like': {
+    name: 'com.trace.packed',
+    packageName: 'com.trace.packed',
+    label: 'Calculator',
+    permissions: ['android.permission.INTERNET'],
+    debuggable: false,
+    cleartext: false,
+    launcher: true,
+    dexStrings: 'Lcom/trace/packed/MainActivity;\ncalculate',
+    packerLib: true,
+    cert: 'normal',
+  },
+  'debug-signed': {
+    name: 'com.trace.debug',
+    packageName: 'com.trace.debug',
+    label: 'Debug Build',
+    permissions: ['android.permission.INTERNET'],
+    debuggable: true,
+    cleartext: false,
+    launcher: true,
+    dexStrings: 'Lcom/trace/debug/MainActivity;\nhello',
+    cert: 'debug',
+  },
+  impersonator: {
+    name: 'com.sbi.kycupdate',
+    packageName: 'com.sbi.kycupdate',
+    label: 'SBI KYC Update',
+    permissions: ['android.permission.INTERNET'],
+    debuggable: false,
+    cleartext: true,
+    launcher: true,
+    dexStrings: 'Lcom/sbi/kycupdate/MainActivity;\nhttp://sbi-kyc-verify.in/api/collect',
+    cert: 'normal',
+  },
+};
+
+function fixtureManifest(spec: FixtureSpec): AxmlNode {
+  const children: AxmlNode[] = [
+    { name: 'uses-sdk', attrs: { 'android:minSdkVersion': '24', 'android:targetSdkVersion': '33' }, children: [] },
+    ...spec.permissions.map((p) => ({ name: 'uses-permission', attrs: { 'android:name': p }, children: [] })),
+    {
+      name: 'application',
+      attrs: {
+        'android:label': spec.label,
+        'android:debuggable': spec.debuggable ? 'true' : 'false',
+        'android:usesCleartextTraffic': spec.cleartext ? 'true' : 'false',
+      },
+      children: [
+        {
+          name: 'activity',
+          attrs: { 'android:name': '.MainActivity', 'android:exported': 'true' },
+          children: spec.launcher
+            ? [
+                {
+                  name: 'intent-filter',
+                  attrs: {},
+                  children: [
+                    { name: 'action', attrs: { 'android:name': 'android.intent.action.MAIN' }, children: [] },
+                    { name: 'category', attrs: { 'android:name': 'android.intent.category.LAUNCHER' }, children: [] },
+                  ],
+                },
+              ]
+            : [],
+        },
+      ],
+    },
+  ];
+  return {
+    name: 'manifest',
+    attrs: { package: spec.packageName, 'android:versionName': '1.0.0', 'android:versionCode': '1' },
+    children,
+  };
+}
+
+export async function buildApkFixture(kind: ApkFixtureKind): Promise<{ name: string; buffer: Buffer }> {
+  const spec = FIXTURES[kind];
+  const zip = new JSZip();
+  const date = new Date('2026-02-01T10:00:00Z');
+  const options = { date, compression: 'DEFLATE' as const };
+
+  zip.file('AndroidManifest.xml', encodeAxml(fixtureManifest(spec)), options);
+  zip.file('classes.dex', dexBlob(spec.dexStrings), options);
+  if (spec.assets) {
+    for (const [path, content] of Object.entries(spec.assets)) zip.file(path, Buffer.from(content, 'utf8'), options);
+  }
+  if (spec.packerLib) {
+    const packer = Buffer.alloc(1200);
+    for (let i = 0; i < packer.length; i++) packer[i] = (i * 7 + 11) & 0xff;
+    zip.file('lib/arm64-v8a/libjiagu.so', packer, options);
+  }
+  if (spec.nestedApk) {
+    const inner = new JSZip();
+    inner.file('AndroidManifest.xml', encodeAxml(fixtureManifest(FIXTURES.benign)), options);
+    inner.file('classes.dex', dexBlob('Lcom/trace/notes/MainActivity;'), options);
+    zip.file('assets/payload.apk', await inner.generateAsync({ type: 'nodebuffer' }), options);
+  }
+  if (spec.cert === 'debug') zip.file('META-INF/ANDROIDD.RSA', fakeCert(), options);
+  else if (spec.cert === 'normal') zip.file('META-INF/CERT.RSA', fakeCert(), options);
+
+  return { name: `${kind}.apk`, buffer: await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', platform: 'DOS' }) };
+}
+
