@@ -1,0 +1,2 @@
+# SHA-256 hashes of known-bad APKs, one per line. Empty by default.
+# Populate from an open feed you trust; never commit real malware.

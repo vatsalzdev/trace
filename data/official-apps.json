@@ -1,0 +1,8 @@
+[
+  { "brand": "PhonePe", "keywords": ["phonepe", "phone pe"], "packages": ["com.phonepe.app"] },
+  { "brand": "Paytm", "keywords": ["paytm"], "packages": ["net.one97.paytm"] },
+  { "brand": "Google Pay", "keywords": ["google pay", "gpay"], "packages": ["com.google.android.apps.nbu.paisa.user"] },
+  { "brand": "WhatsApp", "keywords": ["whatsapp"], "packages": ["com.whatsapp"] },
+  { "brand": "Amazon", "keywords": ["amazon"], "packages": ["in.amazon.mShop.android.shopping"] },
+  { "brand": "SBI", "keywords": ["sbi", "yono"], "packages": ["com.sbi.lotusintouch"] }
+]

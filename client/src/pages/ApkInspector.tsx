@@ -32,6 +32,7 @@ import {
   RuleTable,
   ScoreBar,
   ScoreBlock,
+  VerdictPill,
 } from '@/components/ui';
 
 const COMPONENT_LABEL: Record<string, string> = {
@@ -254,7 +255,31 @@ export default function ApkInspector() {
 
           <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
             <div className="space-y-5">
+              <Card className="p-5" data-testid="apk-verdict-banner">
+                <div className="flex flex-wrap items-center gap-2">
+                  <VerdictPill verdict={analysis.verdict.verdict} confidence={analysis.verdict.confidence} />
+                  <span className="mono text-[10px] text-ink-3">{analysis.verdict.score}/100</span>
+                  {analysis.verdict.categories.map((cat) => (
+                    <span
+                      key={cat}
+                      className="mono rounded border border-line bg-bg-1 px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.1em] text-ink-3"
+                    >
+                      {cat}
+                    </span>
+                  ))}
+                  {analysis.packed && (
+                    <span className="mono rounded border border-warn/30 bg-warn/[0.07] px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.1em] text-warn">
+                      packed
+                    </span>
+                  )}
+                </div>
+                {analysis.verdict.verdict === 'NO_INDICATORS' && analysis.verdict.disclaimer && (
+                  <p className="mt-3 text-[11px] leading-relaxed text-ink-3">{analysis.verdict.disclaimer}</p>
+                )}
+              </Card>
+
               {tab === 'overview' && (
+            <>
             <Card className="p-5">
               <div className="flex flex-wrap items-start justify-between gap-5">
                 <div className="min-w-0">
@@ -288,6 +313,60 @@ export default function ApkInspector() {
               </div>
               <p className="mt-4 border-t border-line pt-4 text-[12.5px] leading-relaxed text-ink-2">{analysis.summary}</p>
             </Card>
+
+            <Card className="p-5">
+              <div className="flex items-center justify-between">
+                <Label>Capability matrix</Label>
+                <span className="mono text-[9px] text-ink-3">STATIC REFERENCES ONLY</span>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {analysis.capabilities.map((cap) => (
+                  <div key={cap.id} className="rounded-md border border-line bg-bg-1 px-3 py-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11.5px] text-ink-2">{cap.label}</span>
+                      <span className={cn('mono text-[9px] uppercase tracking-[0.08em]', cap.triggered ? 'text-danger' : 'text-ink-3')}>
+                        {cap.triggered ? 'present' : 'none'}
+                      </span>
+                    </div>
+                    {cap.evidence.length > 0 && (
+                      <div className="mono mt-1 break-all text-[9.5px] leading-relaxed text-ink-3">{cap.evidence.join(' · ')}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="overflow-hidden">
+              <div className="flex items-center justify-between border-b border-line px-5 py-3">
+                <div>
+                  <Label>DEX files and nested payloads</Label>
+                  <div className="mt-0.5 text-[12px] text-ink-3">Every classes*.dex was parsed; assets and raw resources were inventoried.</div>
+                </div>
+                <FolderSearch size={14} className="text-ink-3" />
+              </div>
+              <div className="divide-y divide-line/70">
+                {analysis.dexFiles.map((dex) => (
+                  <div key={dex.name} className="flex items-center justify-between gap-3 px-5 py-2.5">
+                    <span className="mono break-all text-[10.5px] text-ink-2">{dex.name}</span>
+                    <span className="mono text-[9.5px] text-ink-3">
+                      {formatBytes(dex.size)} · {dex.strings} strings · {dex.methods} methods{dex.truncated ? ' · truncated' : ''}
+                    </span>
+                  </div>
+                ))}
+                {analysis.nestedFiles.map((file) => (
+                  <div key={file.name} className="flex items-center justify-between gap-3 px-5 py-2.5">
+                    <span className="mono break-all text-[10.5px] text-ink-2">{file.name}</span>
+                    <span className={cn('mono text-[9.5px]', file.kind === 'apk' || file.kind === 'dex' ? 'text-danger' : 'text-ink-3')}>
+                      {file.kind.toUpperCase()} · {formatBytes(file.size)}
+                    </span>
+                  </div>
+                ))}
+                {!analysis.dexFiles.length && !analysis.nestedFiles.length && (
+                  <div className="px-5 py-4 text-[11.5px] text-ink-3">No DEX files or nested payloads recorded.</div>
+                )}
+              </div>
+            </Card>
+            </>
               )}
 
               {tab === 'hashes' && (
@@ -509,7 +588,56 @@ export default function ApkInspector() {
                     {analysis.certificate.files.join(', ')}
                   </div>
                 )}
+                {analysis.certificate.subject && (
+                  <div className="border-t border-line pt-2">
+                    <div className="label">Subject</div>
+                    <div className="mono mt-0.5 break-all text-[9.5px] leading-relaxed text-ink-3">{analysis.certificate.subject}</div>
+                  </div>
+                )}
+                {analysis.certificate.issuer && (
+                  <div>
+                    <div className="label">Issuer</div>
+                    <div className="mono mt-0.5 break-all text-[9.5px] leading-relaxed text-ink-3">{analysis.certificate.issuer}</div>
+                  </div>
+                )}
+                {analysis.certificate.sha256Fingerprint && (
+                  <div>
+                    <div className="label">SHA-256 fingerprint</div>
+                    <div className="mono mt-0.5 break-all text-[9px] leading-relaxed text-ink-3">{analysis.certificate.sha256Fingerprint}</div>
+                  </div>
+                )}
+                {analysis.certificate.validTo && (
+                  <div className="flex items-center justify-between text-[10.5px]">
+                    <span className="text-ink-3">Valid to</span>
+                    <span className={analysis.certificate.longValidity ? 'text-warn' : 'text-ink-2'}>
+                      {analysis.certificate.validTo.slice(0, 10)}
+                      {analysis.certificate.longValidity ? ' (30y+)' : ''}
+                    </span>
+                  </div>
+                )}
+                {analysis.certificate.anomalies.length > 0 && (
+                  <div className="text-[10px] leading-relaxed text-warn">{analysis.certificate.anomalies.join(' · ')}</div>
+                )}
               </div>
+            </Card>
+
+            <Card className="p-4" data-testid="coverage-panel">
+              <div className="flex items-center justify-between">
+                <Label>What we could not check</Label>
+                <span className="mono text-[9px] text-ink-3">{analysis.verdict.coverage.checksRun.length} RAN</span>
+              </div>
+              <ul className="mt-3 space-y-2">
+                {analysis.verdict.coverage.checksSkipped.map((skip) => (
+                  <li key={skip.id} className="flex gap-2 text-[11px] leading-relaxed text-ink-3">
+                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--fill-5)]" />
+                    <span>
+                      <span className="mono text-[9px] uppercase tracking-[0.1em] text-ink-2">{skip.id}</span>
+                      <br />
+                      {skip.reason}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </Card>
 
             <Card className="p-4">

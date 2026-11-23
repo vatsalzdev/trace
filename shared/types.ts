@@ -181,6 +181,43 @@ export interface ApkIndicator extends Span {
   source: string;
 }
 
+export interface ApkCertificate {
+  present: boolean;
+  files: string[];
+  subject?: string;
+  issuer?: string;
+  validFrom?: string;
+  validTo?: string;
+  selfSigned?: boolean;
+  sha256Fingerprint?: string;
+  longValidity?: boolean;
+  debugSigned: boolean;
+  anomalies: string[];
+}
+
+export interface NestedFile {
+  name: string;
+  size: number;
+  sha256: string;
+  kind: 'apk' | 'dex' | 'jar' | 'so';
+}
+
+export interface ApkDexFile {
+  name: string;
+  size: number;
+  strings: number;
+  methods: number;
+  truncated: boolean;
+  error?: string;
+}
+
+export interface ApkCapability {
+  id: string;
+  label: string;
+  triggered: boolean;
+  evidence: string[];
+}
+
 export interface ApkAnalysis {
   fileName: string;
   fileSize: number;
@@ -199,9 +236,14 @@ export interface ApkAnalysis {
   score: number;
   riskLabel: RiskLabel;
   hashes: { sha256: string; md5: string };
-  certificate: { present: boolean; files: string[]; subject?: string; debugSigned: boolean };
+  certificate: ApkCertificate;
   manifestFormat: 'axml' | 'xml';
   summary: string;
+  verdict: VerdictResult;
+  nestedFiles: NestedFile[];
+  dexFiles: ApkDexFile[];
+  packed: boolean;
+  capabilities: ApkCapability[];
 }
 
 export interface EntityRecord {
