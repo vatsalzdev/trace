@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "TRACE — cybercrime investigation & threat intelligence platform",
   "engines": {
-    "node": ">=22"
+    "node": ">=24.11.1 <25"
   },
   "workspaces": [
     "client",
