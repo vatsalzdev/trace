@@ -326,7 +326,7 @@ export default function Landing() {
               style={revealed ? { animation: 'lineUp 900ms var(--ease) 140ms both' } : { transform: 'translateY(110%)' }}
             >
               <span>a</span>
-              <em className="font-serif font-normal not-italic" style={{ fontStyle: 'italic', letterSpacing: '-0.02em' }}>
+              <em className="ml-[0.18em] font-serif font-normal not-italic" style={{ fontStyle: 'italic', letterSpacing: '-0.02em' }}>
                 trace
               </em>
               <span>.</span>
