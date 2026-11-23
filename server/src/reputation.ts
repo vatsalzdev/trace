@@ -2,8 +2,9 @@ import type { CoverageCheck, UrlHeuristic } from '../../shared/types';
 
 const TIMEOUT_MS = 4000;
 const CACHE_TTL = 10 * 60 * 1000;
-const GSB_KEY = process.env.GSB_API_KEY?.trim() ?? '';
-const VT_KEY = process.env.VT_API_KEY?.trim() ?? '';
+const ENABLED = process.env.TRACE_ENABLE_REPUTATION === '1';
+const GSB_KEY = ENABLED ? process.env.GSB_API_KEY?.trim() ?? '' : '';
+const VT_KEY = ENABLED ? process.env.VT_API_KEY?.trim() ?? '' : '';
 
 const cache = new Map<string, { at: number; heuristics: UrlHeuristic[]; skipped: CoverageCheck[] }>();
 
@@ -88,6 +89,12 @@ export async function reputationLookup(url: string): Promise<{ heuristics: UrlHe
   const cached = cache.get(url);
   if (cached && Date.now() - cached.at < CACHE_TTL) {
     return { heuristics: cached.heuristics, skipped: cached.skipped };
+  }
+  if (!ENABLED) {
+    return {
+      heuristics: [],
+      skipped: [{ id: 'reputation', reason: 'Reputation lookups are off; set TRACE_ENABLE_REPUTATION=1 with a provider key to enable them.' }],
+    };
   }
   if (!GSB_KEY && !VT_KEY) {
     return {

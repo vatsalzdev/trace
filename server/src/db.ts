@@ -7,9 +7,14 @@ import type { CaseRecord, EntityRecord, EntityType, EventRecord, ReportPayload }
 import { normalizeEntity } from '../../shared/message';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const dataDir = process.env.TRACE_DB_DIR ? resolve(process.env.TRACE_DB_DIR) : join(here, '..', 'data');
+const dbPath = process.env.TRACE_DB_PATH
+  ? resolve(process.env.TRACE_DB_PATH)
+  : process.env.TRACE_DB_DIR
+    ? resolve(process.env.TRACE_DB_DIR, 'trace.db')
+    : join(here, '..', 'data', 'trace.db');
+const dataDir = dirname(dbPath);
 if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
-export const DB_PATH = join(dataDir, 'trace.db');
+export const DB_PATH = dbPath;
 
 export const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');

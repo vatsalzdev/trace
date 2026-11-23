@@ -71,8 +71,8 @@ async function stopServer(server) {
   }
 }
 
-async function call(server, path, { method = 'GET', json, form } = {}) {
-  const init = { method, headers: {} };
+async function call(server, path, { method = 'GET', json, form, headers = {} } = {}) {
+  const init = { method, headers: { ...headers } };
   if (json !== undefined) {
     init.headers['content-type'] = 'application/json';
     init.body = JSON.stringify(json);
@@ -375,5 +375,47 @@ test('10b. Unroutable lookup target exercises the four-second timeout', async ()
     evidence('4s timeout', { elapsedMs: elapsed, mode: res.body.analysis.enrichment.mode, status: res.status, target: '10.255.255.1' });
   } finally {
     await stopServer(timeoutServer);
+  }
+});
+
+test('11. Production rate limits are per-endpoint', async () => {
+  const limited = startServer('limited', {
+    NODE_ENV: 'production',
+    TRACE_DEMO: '1',
+    TRACE_FORCE_OFFLINE: '1',
+  });
+  try {
+    await waitReady(limited);
+    const urlIp = { 'x-forwarded-for': '203.0.113.41' };
+    let urlRes;
+    for (let i = 0; i < 11; i++) {
+      urlRes = await call(limited, '/api/analyze/url', {
+        method: 'POST',
+        json: { url: 'https://example.com' },
+        headers: urlIp,
+      });
+    }
+    assert.equal(urlRes.status, 429);
+    assert.match(urlRes.body.error, /too many requests/i);
+    const afterUrlLimit = await call(limited, '/api/analyze/message', {
+      method: 'POST',
+      json: { text: 'Your OTP is 123456' },
+      headers: urlIp,
+    });
+    assert.equal(afterUrlLimit.status, 200, 'URL limiter blocked an unrelated endpoint');
+
+    const apkIp = { 'x-forwarded-for': '203.0.113.42' };
+    let apkRes;
+    for (let i = 0; i < 11; i++) {
+      const form = new FormData();
+      form.append('apk', new Blob([Buffer.from('PK')]), 'tiny.apk');
+      apkRes = await call(limited, '/api/analyze/apk', { method: 'POST', form, headers: apkIp });
+    }
+    assert.equal(apkRes.status, 429);
+    const afterApkLimit = await call(limited, '/api/health', { headers: apkIp });
+    assert.equal(afterApkLimit.status, 200, 'APK limiter blocked an unrelated endpoint');
+    evidence('rate limits', { urlAfter11: urlRes.status, apkAfter11: apkRes.status, otherEndpointsStillUp: true });
+  } finally {
+    await stopServer(limited);
   }
 });

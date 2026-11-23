@@ -35,6 +35,8 @@ import {
   VerdictPill,
 } from '@/components/ui';
 
+const APK_MAX_BYTES = 20 * 1024 * 1024;
+
 const COMPONENT_LABEL: Record<string, string> = {
   activity: 'Activity',
   service: 'Service',
@@ -70,8 +72,16 @@ export default function ApkInspector() {
 
   const run = async (file: File | null, sample = false) => {
     if (!file && !sample) return;
-    setLoading(true);
     setError('');
+    if (file && file.size > APK_MAX_BYTES) {
+      setError('APK must be 20 MB or smaller.');
+      return;
+    }
+    if (file && !/\.apk$/i.test(file.name) && file.type !== 'application/vnd.android.package-archive') {
+      setError('Choose a .apk file.');
+      return;
+    }
+    setLoading(true);
     setProgress(sample ? 18 : 2);
     setCaseId(null);
     setAnalysis(null);
@@ -183,7 +193,7 @@ export default function ApkInspector() {
             {loading ? 'Inspecting package…' : 'Drop an APK here, or choose a file'}
           </div>
           <p className="mt-1.5 max-w-[56ch] text-[12px] leading-relaxed text-ink-3">
-            Maximum 48 MB. The package is parsed in memory, never installed. Binary Android manifests are decoded; a plain
+            Maximum 20 MB. The package is parsed in memory, never installed. Binary Android manifests are decoded; a plain
             XML manifest is also accepted.
           </p>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2">

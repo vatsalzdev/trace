@@ -7,9 +7,11 @@ import { computeVerdict } from '../../shared/verdict';
 import { deepScan } from './deep-scan';
 import { dnsFixture, hasFixture, redirectFixture, registrationFixture, tlsFixture } from './fixtures';
 import { reputationLookup } from './reputation';
+import { assertPublicUrl } from './ssrf';
 
 const TIMEOUT = 4000;
 const FORCE_OFFLINE = process.env.TRACE_FORCE_OFFLINE === '1';
+const DEEP_SCAN_ENABLED = process.env.TRACE_ENABLE_DEEP_SCAN === '1' || process.env.NODE_ENV !== 'production';
 const LOOKUP_HOST = process.env.TRACE_LOOKUP_HOST?.trim() ?? '';
 const cache = new Map<string, { value: Enrichment; at: number }>();
 const CACHE_TTL = 10 * 60 * 1000;
@@ -179,6 +181,11 @@ async function followRedirects(start: string): Promise<{ hops: RedirectHop[]; li
   const timer = setTimeout(() => controller.abort(), 5000);
   try {
     for (let i = 0; i < 5; i++) {
+      try {
+        await timeout(assertPublicUrl(current), 3000);
+      } catch {
+        return { hops: [], live: false };
+      }
       const res = await fetch(current, {
         method: 'GET',
         redirect: 'manual',
@@ -379,7 +386,7 @@ export async function enrichUrl(
     checksSkipped: reputation.skipped,
   });
 
-  if (options.deepScan) {
+  if (options.deepScan && DEEP_SCAN_ENABLED) {
     const scan = await deepScan(analysis.normalized);
     result = applyExtras(result, {
       heuristics: scan.heuristics,
@@ -388,10 +395,13 @@ export async function enrichUrl(
       note: scan.note,
     });
   } else {
+    const reason = DEEP_SCAN_ENABLED
+      ? 'Deep scan is off; the landing page was not fetched.'
+      : 'Deep scan is disabled in production by default; the landing page was not fetched.';
     result = applyExtras(result, {
       heuristics: [],
       checksRun: [],
-      checksSkipped: [{ id: 'deep-scan', reason: 'Deep scan is off; the landing page was not fetched.' }],
+      checksSkipped: [{ id: 'deep-scan', reason }],
     });
   }
   return result;

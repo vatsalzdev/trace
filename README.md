@@ -6,7 +6,7 @@ No machine learning, no LLM, no external AI API, no probabilistic inference.
 
 ## Quick start
 
-Requirements: Node.js 18+ and npm.
+Requirements: Node.js 22+ and npm (the bundled `better-sqlite3` release requires Node 22).
 
 ```bash
 npm install
@@ -25,8 +25,49 @@ npm run test:api         # API + Phase D unit tests
 npm run eval             # labelled evaluation sets -> EVAL_REPORT.md
 npm run blocklist:import <domains.txt>  # compile a local blocklist into shared/blocklist.ts
 npm run preview          # preview the built client
-npm run start            # run only the API
+npm run start            # serve built client + API (production mode)
 ```
+
+## Deployment (Render free web service)
+
+TRACE runs as one Node service: Express serves `client/dist` and every `/api` route from the same origin. The root `render.yaml` defines that service as `trace-demo`.
+
+Local production-mode check:
+
+```bash
+npm ci
+npm run build
+NODE_ENV=production TRACE_DEMO=1 TRACE_ENABLE_DEEP_SCAN=0 npm start
+```
+
+The committed `.npmrc` sets `ignore-scripts=true`; the bundled `better-sqlite3` release ships prebuilt binaries, so no local native build or Python toolchain is required.
+
+Open <http://localhost:5174> (or the `PORT` you set). To use a different SQLite file, set `TRACE_DB_PATH=/absolute/path/to/trace.db`; its parent directory is created automatically. The legacy `TRACE_DB_DIR` directory variable still works, and the default is `server/data/trace.db`.
+
+Required environment variables on Render:
+
+| Variable | Value | Purpose |
+| --- | --- | --- |
+| `NODE_ENV` | `production` | Enables production hardening and keeps deep scan off unless explicitly enabled. |
+| `TRACE_DEMO` | `1` | Shows the small dismissible public-demo banner and enables API rate limits. |
+| `TRACE_ENABLE_DEEP_SCAN` | `0` | Prevents public requests from fetching target pages. |
+
+Optional server-side variables: `PORT` (Render sets it), `TRACE_DB_PATH`, `TRACE_DB_DIR`, `TRACE_FORCE_OFFLINE=1`, `TRACE_ENABLE_REPUTATION=1` with `GSB_API_KEY` and/or `VT_API_KEY`. Do not put provider keys in any `VITE_*` variable; there are none. Cached demo enrichment is labelled as a fixture, never as live data.
+
+Deploy steps:
+
+1. Push this repository to GitHub (this work prepares the repository only; it does not push).
+2. In Render, choose **New → Blueprint**, select that repository and branch, and accept the one-service `render.yaml` plan.
+3. Confirm `NODE_ENV`, `TRACE_DEMO` and `TRACE_ENABLE_DEEP_SCAN` in the service's Environment tab.
+4. Watch the build log for `npm ci && npm run build`, then the start log for `listening on 0.0.0.0:<PORT>`.
+5. Open the service URL and check `/api/health`; HTTP 200 means the database initialised.
+
+Free-tier and public-demo limits:
+
+- Render's free-tier filesystem is ephemeral. Saved cases, reports and the seeded SQLite file can disappear after a restart, redeploy or instance replacement. Do not rely on it as durable storage.
+- There is no authentication, so treat every case note and upload as public. Rate limits are in-memory and per instance (about 60 API requests/minute and 10 URL or APK requests/minute per IP); they are not a substitute for authentication or a shared distributed limiter.
+- APK uploads are capped at 20 MB, parsed in memory, never installed or executed. Deep scan and external reputation lookups are off by default; a request to enable deep scan while disabled is recorded as a skipped check.
+- Helmet security headers and same-origin-only access are enabled. CSP is relaxed because the built UI injects runtime styles. No stack trace, environment variable or API key is returned in an error response.
 
 ## Architecture
 
@@ -139,7 +180,7 @@ Registrable-domain extraction uses `tldts` (offline public suffix data), not a h
 
 Brand-independent checks (no brand list required) include random-looking labels, keyword stuffing, embedded full domains (`paypal.com.evil.xyz`), lookalike TLD swaps, userinfo tricks, `data:`/`javascript:` schemes and double-encoded paths. Findings are grouped by category: identity, structure, infrastructure, content and reputation.
 
-**Deep scan** is opt-in (“Deep scan: fetch the page”). The server fetches the final landing page and analyses the HTML statically: password forms, cross-domain form actions, OTP/PIN/CVV/Aadhaar fields, brand mismatch, hidden iframes, meta refresh, obfuscated inline JS and cross-domain favicons. It is protected by an SSRF guard that allows HTTP(S) only, resolves DNS first, rejects loopback/private/link-local/CGNAT/metadata addresses, re-checks every redirect hop, caps redirects at 5 and the body at 2 MB, and never executes JavaScript. Optional reputation lookups (Google Safe Browsing, VirusTotal) run only when their env keys are set; otherwise they are listed as skipped and never affect the verdict.
+**Deep scan** is opt-in (“Deep scan: fetch the page”) and disabled by default in production unless `TRACE_ENABLE_DEEP_SCAN=1`. The server fetches the final landing page and analyses the HTML statically: password forms, cross-domain form actions, OTP/PIN/CVV/Aadhaar fields, brand mismatch, hidden iframes, meta refresh, obfuscated inline JS and cross-domain favicons. It is protected by an SSRF guard that allows HTTP(S) only, resolves DNS first, rejects loopback/private/link-local/CGNAT/metadata addresses, re-checks every redirect hop, caps redirects at 5 and the body at 2 MB, and never executes JavaScript. Optional reputation lookups (Google Safe Browsing, VirusTotal) run only when `TRACE_ENABLE_REPUTATION=1` and their env keys are set; otherwise they are listed as skipped and never affect the verdict.
 
 ### APK inspection
 
@@ -197,7 +238,8 @@ The brand list is curated, not exhaustive; the bundled popular-domain list is ro
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/health` | Service health |
+| `GET` | `/api/health` | Service health, including database readiness |
+| `GET` | `/api/config` | Public banner flag (`demo`) for the console |
 | `POST` | `/api/analyze/message` | Message analysis (optional `save`) |
 | `POST` | `/api/analyze/url` | URL analysis with enrichment |
 | `POST` | `/api/analyze/apk` | Multipart `apk` upload or `sample=true` |

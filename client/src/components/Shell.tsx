@@ -16,6 +16,7 @@ import {
   ScanLine,
   Search,
   Sun,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useMediaQuery } from '@/lib/hooks';
@@ -67,6 +68,7 @@ export function Shell() {
   });
   const [theme, setTheme] = useState<Theme>(resolveTheme);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [demoWarning, setDemoWarning] = useState(false);
   const isMobile = useMediaQuery('(max-width: 900px)');
   const location = useLocation();
   const navigate = useNavigate();
@@ -86,6 +88,19 @@ export function Shell() {
     persistTheme(theme);
     return clearConsoleTheme;
   }, [theme]);
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/config')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((config: { demo?: boolean } | null) => {
+        if (active) setDemoWarning(Boolean(config?.demo));
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
@@ -268,6 +283,23 @@ export function Shell() {
           </AnimatePresence>
         </main>
       </div>
+
+      {demoWarning && (
+        <div
+          data-testid="demo-warning"
+          className="fixed bottom-3 left-1/2 z-[60] flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-2 rounded-lg border border-warn/25 bg-bg-2/95 px-3 py-2 text-[11px] text-ink-2 shadow-[var(--shadow-panel)] backdrop-blur"
+        >
+          <Info size={13} className="shrink-0 text-warn" />
+          <span>Public demo. Synthetic data. Do not paste real personal data. Saved cases may reset.</span>
+          <button
+            onClick={() => setDemoWarning(false)}
+            aria-label="Dismiss demo warning"
+            className="ml-1 text-ink-3 transition-colors hover:text-ink"
+          >
+            <X size={13} />
+          </button>
+        </div>
+      )}
 
       <CommandPalette
         open={paletteOpen}

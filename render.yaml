@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: trace-demo
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRACE_DEMO
+        value: "1"
+      - key: TRACE_ENABLE_DEEP_SCAN
+        value: "0"

@@ -42,7 +42,8 @@ function loadKnownBadHashes(): Set<string> {
 }
 
 const KNOWN_BAD_HASHES = loadKnownBadHashes();
-const VT_KEY = process.env.VT_API_KEY?.trim() ?? '';
+const REPUTATION_ENABLED = process.env.TRACE_ENABLE_REPUTATION === '1';
+const VT_KEY = REPUTATION_ENABLED ? process.env.VT_API_KEY?.trim() ?? '' : '';
 const vtCache = new Map<string, { at: number; hits: number; skipped?: CoverageCheck }>();
 
 interface OfficialApp {
@@ -530,7 +531,12 @@ export async function inspectApk(buffer: Buffer, fileName = 'upload.apk'): Promi
     }
     if (vt.skipped) reputationSkipped.push(vt.skipped);
   } else {
-    reputationSkipped.push({ id: 'reputation-hash', reason: 'No hash reputation source is configured; the bundled list is empty and VT_API_KEY is unset.' });
+    reputationSkipped.push({
+      id: 'reputation-hash',
+      reason: REPUTATION_ENABLED
+        ? 'No hash reputation source is configured; the bundled list is empty and VT_API_KEY is unset.'
+        : 'Hash reputation lookups are off; set TRACE_ENABLE_REPUTATION=1 with VT_API_KEY to enable them.',
+    });
   }
 
   const triggered = rules.filter((r) => r.triggered);

@@ -1,7 +1,8 @@
 import express from 'express';
+import helmet from 'helmet';
 import multer from 'multer';
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ApkAnalysis, EntityType, UrlAnalysis } from '../../shared/types';
 import { analyzeMessage } from '../../shared/message';
@@ -10,6 +11,7 @@ import { inspectApk } from './apk';
 import {
   addEntityToCase,
   buildGraph,
+  db,
   createReport,
   getCase,
   getEntity,
@@ -30,17 +32,48 @@ import { seedIfEmpty } from './seed';
 const here = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = Number(process.env.PORT ?? 5174);
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 48 * 1024 * 1024 } });
+const DEMO = process.env.TRACE_DEMO === '1';
+const APK_MAX_BYTES = 20 * 1024 * 1024;
+const RATE_WINDOW_MS = 60_000;
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: APK_MAX_BYTES, files: 1 } });
 const apkCache = new Map<string, ApkAnalysis>();
 
+interface RateBucket {
+  start: number;
+  total: number;
+  url: number;
+  apk: number;
+}
+const buckets = new Map<string, RateBucket>();
+
+function rateLimit(kind: keyof Omit<RateBucket, 'start'>, max: number) {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const now = Date.now();
+    const ip = req.ip ?? 'unknown';
+    let bucket = buckets.get(ip);
+    if (!bucket || now - bucket.start >= RATE_WINDOW_MS) {
+      bucket = { start: now, total: 0, url: 0, apk: 0 };
+      buckets.set(ip, bucket);
+    }
+    bucket[kind]++;
+    if (bucket[kind] > max) {
+      res.setHeader('Retry-After', String(Math.max(1, Math.ceil((RATE_WINDOW_MS - (now - bucket.start)) / 1000))));
+      return res.status(429).json({ ok: false, error: 'Too many requests. Please wait a moment and try again.' });
+    }
+    next();
+  };
+}
+
+app.disable('x-powered-by');
+app.set('trust proxy', 1);
+// Runtime-injected styles in the built UI need CSP relaxed; other Helmet headers stay on.
+app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: 'same-origin' } }));
 app.use(express.json({ limit: '4mb' }));
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,OPTIONS');
-  if (req.method === 'OPTIONS') return res.sendStatus(204);
-  next();
-});
+if (process.env.NODE_ENV === 'production' || DEMO) {
+  app.use('/api', rateLimit('total', 60));
+  app.use('/api/analyze/url', rateLimit('url', 10));
+  app.use('/api/analyze/apk', rateLimit('apk', 10));
+}
 
 const wrap = (fn: (req: express.Request, res: express.Response) => Promise<unknown> | unknown) =>
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -65,7 +98,16 @@ function apkEntities(result: ApkAnalysis): EntityInput[] {
 }
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'trace-api', now: new Date().toISOString() });
+  try {
+    db.prepare('SELECT 1 AS ok').get();
+    res.json({ ok: true, service: 'trace-api' });
+  } catch {
+    res.status(503).json({ ok: false, error: 'Database unavailable' });
+  }
+});
+
+app.get('/api/config', (_req, res) => {
+  res.json({ demo: DEMO });
 });
 
 app.post(
@@ -111,7 +153,11 @@ app.post(
       }
       res.json({ ok: true, analysis: result, entities: urlEntities(result), caseId });
     } catch (error) {
-      res.status(400).json({ ok: false, error: error instanceof Error ? error.message : 'URL analysis failed' });
+      const detail = error instanceof Error ? error.message : '';
+      res.status(400).json({
+        ok: false,
+        error: /refused|required|invalid|timeout/i.test(detail) ? detail : 'URL analysis failed.',
+      });
     }
   }),
 );
@@ -123,8 +169,18 @@ app.post(
     let buffer: Buffer;
     let fileName: string;
     if (req.file) {
+      const safeName = basename(req.file.originalname || 'upload.apk');
+      if (!/\.apk$/i.test(safeName) && req.file.mimetype !== 'application/vnd.android.package-archive') {
+        return res.status(400).json({ ok: false, error: 'Upload must be an .apk file.' });
+      }
+      if (req.file.buffer.length > APK_MAX_BYTES) {
+        return res.status(413).json({ ok: false, error: 'APK exceeds the 20 MB limit.' });
+      }
+      if (req.file.buffer.subarray(0, 2).toString('latin1') !== 'PK') {
+        return res.status(400).json({ ok: false, error: 'File does not look like a ZIP-based APK.' });
+      }
       buffer = req.file.buffer;
-      fileName = req.file.originalname;
+      fileName = safeName;
     } else if (req.body?.sample) {
       buffer = await buildSampleApk();
       fileName = SAMPLE_APK_NAME;
@@ -149,7 +205,7 @@ app.post(
       }
       res.json({ ok: true, analysis: result, caseId });
     } catch (error) {
-      res.status(400).json({ ok: false, error: error instanceof Error ? error.message : 'APK inspection failed' });
+      res.status(400).json({ ok: false, error: 'APK could not be parsed. Upload a valid ZIP-based Android package.' });
     }
   }),
 );
@@ -310,21 +366,30 @@ app.get(
   }),
 );
 
+app.use('/api', (_req, res) => res.status(404).json({ ok: false, error: 'API route not found.' }));
+
 const dist = join(here, '..', '..', 'client', 'dist');
-if (existsSync(dist)) {
+if (existsSync(join(dist, 'index.html'))) {
   app.use(express.static(dist));
   app.get(/^(?!\/api).*/, (_req, res) => res.sendFile(join(dist, 'index.html')));
 }
 
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('[trace] api error:', err.message);
-  res.status(500).json({ ok: false, error: err.message || 'Internal error' });
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (err instanceof multer.MulterError) {
+    const tooLarge = err.code === 'LIMIT_FILE_SIZE';
+    return res.status(tooLarge ? 413 : 400).json({
+      ok: false,
+      error: tooLarge ? 'APK exceeds the 20 MB limit.' : 'Upload was rejected.',
+    });
+  }
+  console.error('[trace] api error:', err instanceof Error ? err.message : 'unknown error');
+  res.status(500).json({ ok: false, error: 'Internal server error.' });
 });
 
 async function main() {
   await seedIfEmpty();
-  app.listen(PORT, () => {
-    console.log(`[trace] api listening on http://localhost:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[trace] listening on 0.0.0.0:${PORT}`);
   });
 }
 
