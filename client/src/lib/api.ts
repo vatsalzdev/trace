@@ -85,7 +85,7 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ text, ...opts }),
     }),
-  analyzeUrl: (url: string, opts: { save?: boolean; title?: string } = {}) =>
+  analyzeUrl: (url: string, opts: { save?: boolean; title?: string; deepScan?: boolean } = {}) =>
     request<{ ok: boolean; analysis: UrlAnalysis & { enrichment?: unknown }; caseId?: string }>('/analyze/url', {
       method: 'POST',
       body: JSON.stringify({ url, ...opts }),

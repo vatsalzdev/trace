@@ -1,9 +1,12 @@
+import { parse as parseDomain } from 'tldts';
+import { BLOCKLIST, BLOCKLIST_SOURCE } from './blocklist';
+import { detectMixedScript, skeleton, toUnicodeHost } from './confusables';
 import {
   BRANDS,
   KNOWN_TLDS,
-  MULTI_PART_SUFFIXES,
   SUSPICIOUS_PATH_WORDS,
   SUSPICIOUS_TLDS,
+  TOP_DOMAINS,
   URL_SHORTENERS,
 } from './data';
 import type { RiskLabel, UrlAnalysis, UrlBreakdown, UrlHeuristic } from './types';
@@ -17,8 +20,9 @@ export function riskFromScore(score: number): RiskLabel {
 
 export function ensureScheme(input: string): string {
   const trimmed = input.trim();
-  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) return trimmed;
-  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed) && !trimmed.includes('/')) return trimmed;
+  if (/^(?:https?|ftp):\/\//i.test(trimmed)) return trimmed;
+  // Script/data schemes are analysed as-is so they can be flagged, not rewritten into http.
+  if (/^(?:javascript|data|vbscript|file|mailto|tel):/i.test(trimmed)) return trimmed;
   return `http://${trimmed.replace(/^\/+/, '')}`;
 }
 
@@ -31,12 +35,12 @@ export function splitHost(host: string): { labels: string[]; registrable: string
   if (isIpHost(clean)) return { labels: [clean], registrable: clean, domain: clean, tld: '' };
   const labels = clean.split('.').filter(Boolean);
   if (labels.length <= 1) return { labels, registrable: clean, domain: clean, tld: '' };
-  const last2 = labels.slice(-2).join('.');
-  const suffix = MULTI_PART_SUFFIXES.includes(last2) ? last2 : labels[labels.length - 1];
-  const suffixParts = suffix.split('.').length;
-  const domain = labels[labels.length - suffixParts - 1] ?? '';
-  const registrable = [domain, suffix].filter(Boolean).join('.');
-  return { labels, registrable, domain, tld: suffix };
+  // tldts ships the full public suffix list, so multi-part suffixes work offline.
+  const parsed = parseDomain(clean, { allowPrivateDomains: true });
+  const registrable = parsed.domain ?? clean;
+  const tld = parsed.publicSuffix ?? labels[labels.length - 1];
+  const domain = parsed.domain && tld ? registrable.slice(0, Math.max(0, registrable.length - tld.length - 1)) : labels[0];
+  return { labels, registrable, domain, tld };
 }
 
 export function shannonEntropy(value: string): number {
@@ -125,6 +129,7 @@ export function analyzeUrl(input: string): UrlAnalysis {
   const { url, breakdown, registrable, isIp } = parseBreakdown(input);
   const host = url.hostname.toLowerCase();
   const full = url.href;
+  const scheme = url.protocol.replace(':', '').toLowerCase();
   const heuristics: UrlHeuristic[] = [];
 
   const add = (
@@ -162,6 +167,123 @@ export function analyzeUrl(input: string): UrlAnalysis {
       ? [`"${brandHit.keyword}" appears in ${host}${url.pathname}`, `official domains: ${brandHit.brand.domains.join(', ')}`]
       : [],
     'A protected brand appears in the host or path, but the registrable domain is not owned by that brand.',
+    'identity',
+  );
+
+  const unicodeDomain = toUnicodeHost(breakdown.domain);
+  const domainSkeleton = skeleton(unicodeDomain);
+  const brandSkeletonMatch = (() => {
+    if (isIp || domainSkeleton.length < 4) return null;
+    if (BRANDS.some((b) => isOfficialHost(host, b))) return null;
+    for (const brand of BRANDS) {
+      for (const keyword of brand.keywords) {
+        const ks = skeleton(keyword.replace(/\s+/g, ''));
+        if (ks.length >= 4 && (ks === domainSkeleton || levenshtein(ks, domainSkeleton) <= 1)) {
+          return { label: `${brand.name} (${keyword})`, official: brand.domains[0] ?? 'unknown' };
+        }
+      }
+    }
+    for (const domain of TOP_DOMAINS) {
+      const label = skeleton(domain.split('.')[0]);
+      if (label.length >= 4 && label === domainSkeleton && !TOP_DOMAINS.includes(registrable)) {
+        return { label: domain, official: domain };
+      }
+    }
+    return null;
+  })();
+  add(
+    'homoglyph-skeleton',
+    'Confusable skeleton matches a trusted name',
+    30,
+    Boolean(brandSkeletonMatch),
+    brandSkeletonMatch
+      ? [
+          `skeleton "${domainSkeleton}" matches ${brandSkeletonMatch.label}`,
+          `legitimate domain: ${brandSkeletonMatch.official}`,
+          unicodeDomain !== domainSkeleton ? `decoded label: ${unicodeDomain}` : `raw label: ${breakdown.domain}`,
+        ]
+      : [],
+    'After Unicode confusable folding, the registrable label reads as a protected brand or popular domain that this host does not own.',
+    'identity',
+  );
+
+  const mixedLabels = labels
+    .map((label) => ({ label, ...detectMixedScript(label) }))
+    .filter((entry) => entry.mixed);
+  add(
+    'mixed-script',
+    'Mixed-script homoglyph hostname',
+    30,
+    mixedLabels.length > 0,
+    mixedLabels.map((entry) => `label "${entry.label}" decodes to "${entry.unicode}" (${entry.scripts.join(' + ')})`),
+    'One label mixes Latin with Cyrillic or Greek letters that render identically — the classic homoglyph attack.',
+    'identity',
+  );
+
+  const domainLetters = breakdown.domain.replace(/[^a-z]/g, '');
+  const vowelRatio = domainLetters ? (domainLetters.match(/[aeiou]/g)?.length ?? 0) / domainLetters.length : 0.5;
+  const digitRatio = breakdown.domain ? (breakdown.domain.match(/\d/g)?.length ?? 0) / breakdown.domain.length : 0;
+  const labelEntropy = shannonEntropy(breakdown.domain);
+  const randomLabel =
+    !isIp && breakdown.domain.length >= 8 && labelEntropy > 3.5 && (vowelRatio < 0.2 || digitRatio > 0.25);
+  add(
+    'random-label',
+    'Random-looking domain label',
+    15,
+    randomLabel,
+    [`entropy ${labelEntropy.toFixed(2)}, vowel ratio ${vowelRatio.toFixed(2)}, digit ratio ${digitRatio.toFixed(2)}`],
+    'Machine-generated labels lack normal vowel structure or mix in digits, which is typical of bulk phishing registration.',
+  );
+
+  const hostLureWords = [...new Set(SUSPICIOUS_PATH_WORDS.filter((word) => labels.some((label) => label.includes(word))))];
+  add(
+    'keyword-stuffing',
+    'Lure-word stuffing in hostname',
+    15,
+    hostLureWords.length >= 3,
+    hostLureWords.map((word) => `"${word}" in host`),
+    'Three or more security or payment words packed into the hostname is a template signature, not a brand name.',
+  );
+
+  const knownDomains = new Set<string>([...TOP_DOMAINS, ...BRANDS.flatMap((brand) => brand.domains)]);
+  let embeddedDomain = '';
+  for (let i = 1; i < labels.length - 1; i++) {
+    const candidate = labels.slice(0, i + 1).join('.');
+    if (candidate !== registrable && knownDomains.has(candidate)) {
+      embeddedDomain = candidate;
+      break;
+    }
+  }
+  add(
+    'embedded-domain',
+    'Another domain embedded in the host',
+    25,
+    Boolean(embeddedDomain),
+    embeddedDomain ? [`host contains "${embeddedDomain}" before the real domain ${registrable}`] : [],
+    'The host spells out a trusted domain inside its own name (paypal.com.evil.xyz); the real owner is the last labels.',
+    'identity',
+  );
+
+  const knownLabels = new Map<string, string>();
+  for (const domain of TOP_DOMAINS) {
+    const label = domain.split('.')[0];
+    if (!knownLabels.has(label)) knownLabels.set(label, domain);
+  }
+  for (const brand of BRANDS) {
+    for (const domain of brand.domains) {
+      const label = domain.split('.')[0];
+      if (!knownLabels.has(label)) knownLabels.set(label, domain);
+    }
+  }
+  const officialAny = BRANDS.some((brand) => isOfficialHost(host, brand)) || TOP_DOMAINS.includes(registrable);
+  const tldSwap = !isIp && !officialAny && knownLabels.has(breakdown.domain);
+  add(
+    'tld-swap',
+    'Trusted name reused on a different TLD',
+    20,
+    tldSwap,
+    tldSwap ? [`"${breakdown.domain}" matches ${knownLabels.get(breakdown.domain)} but uses .${breakdown.tld}`] : [],
+    'Reusing a well-known second-level name on a cheap or unfamiliar TLD is a common look-alike strategy.',
     'identity',
   );
 
@@ -236,6 +358,17 @@ export function analyzeUrl(input: string): UrlAnalysis {
     'transport',
   );
 
+  const dangerousScheme = ['javascript', 'data', 'vbscript', 'file'].includes(scheme);
+  add(
+    'dangerous-scheme',
+    'Script or data URL scheme',
+    35,
+    dangerousScheme,
+    dangerousScheme ? [`scheme is "${scheme}:"`] : [],
+    'A javascript:, data: or file: link does not point to a website; it runs or embeds content in the browser context.',
+    'structure',
+  );
+
   const hasAt = /^[a-z]+:\/\/[^/]*@/i.test(full);
   add(
     'at-sign',
@@ -279,6 +412,28 @@ export function analyzeUrl(input: string): UrlAnalysis {
     'transport',
   );
 
+  const pctCount = (url.pathname.match(/%[0-9a-f]{2}/gi) ?? []).length;
+  const doubleEncoded = /%25[0-9a-f]{2}/i.test(`${url.pathname}${url.search}`);
+  add(
+    'encoded-path',
+    'Encoded path obfuscation',
+    10,
+    doubleEncoded || pctCount >= 4,
+    doubleEncoded ? ['double-encoded (%25xx) sequence in path'] : [`${pctCount} percent-encoded bytes in path`],
+    'Heavy or double encoding hides the real path from filters and from the person reading the link.',
+  );
+
+  const listed = BLOCKLIST.includes(registrable) || BLOCKLIST.includes(host);
+  add(
+    'blocklist',
+    'Listed on local blocklist',
+    40,
+    listed,
+    listed ? [`${registrable} is listed in ${BLOCKLIST_SOURCE || 'the bundled blocklist'}`] : [],
+    'The domain appears in a locally imported phishing blocklist snapshot.',
+    'infrastructure',
+  );
+
   const entropy = shannonEntropy(breakdown.domain);
   add(
     'entropy',
@@ -292,30 +447,46 @@ export function analyzeUrl(input: string): UrlAnalysis {
   // Typosquat / brand-combination detection on the registrable label.
   let typosquatEvidence: string[] = [];
   let typosquatBrand = '';
-  if (!isIp) {
+  if (!isIp && !brandSkeletonMatch) {
+    const label = breakdown.domain;
     for (const brand of BRANDS) {
       for (const keyword of brand.keywords) {
         const compact = keyword.replace(/\s+/g, '');
         if (compact.length < 3) continue;
-        const label = breakdown.domain;
         if (isOfficialHost(host, brand)) continue;
-        const distance = levenshtein(label, compact);
+        const distance = Math.min(levenshtein(label, compact), levenshtein(skeleton(label), skeleton(compact)));
         const brandCombined =
           label.startsWith(`${compact}-`) ||
           label.startsWith(`${compact}1`) ||
           label.startsWith(`${compact}online`) ||
           label.includes(`${compact}-`);
-        if ((distance <= 2 && Math.abs(label.length - compact.length) <= 2 && compact.length >= 4) || brandCombined) {
+        const maxDistance = compact.length <= 5 ? 1 : 2;
+        if ((distance <= maxDistance && Math.abs(label.length - compact.length) <= 1 && compact.length >= 4) || brandCombined) {
           typosquatEvidence = [
             `registrable label "${label}" imitates "${keyword}"`,
             `edit distance to "${compact}": ${distance}`,
-            `legitimate domain: ${brand.domains[0]}`,
+            `legitimate domain: ${brand.domains[0] ?? 'unknown'}`,
           ];
           typosquatBrand = brand.name;
           break;
         }
       }
       if (typosquatEvidence.length) break;
+    }
+    if (!typosquatEvidence.length && !TOP_DOMAINS.includes(registrable)) {
+      for (const domain of TOP_DOMAINS) {
+        const compact = domain.split('.')[0];
+        if (compact.length < 4 || label === compact) continue;
+        const distance = levenshtein(skeleton(label), skeleton(compact));
+        if (distance <= 1) {
+          typosquatEvidence = [
+            `registrable label "${label}" is one edit from popular domain "${domain}"`,
+            `skeleton distance: ${distance}`,
+          ];
+          typosquatBrand = compact;
+          break;
+        }
+      }
     }
   }
   add(

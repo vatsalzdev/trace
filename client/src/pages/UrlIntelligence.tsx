@@ -33,6 +33,7 @@ import {
   RuleTable,
   ScoreBar,
   ScoreBlock,
+  VerdictPill,
 } from '@/components/ui';
 
 type UrlResult = UrlAnalysis & { enrichment?: Enrichment };
@@ -49,6 +50,7 @@ export default function UrlIntelligence() {
   const [params] = useSearchParams();
   const initial = params.get('u') ?? '';
   const [input, setInput] = useState(initial);
+  const [deepScan, setDeepScan] = useState(false);
   const [result, setResult] = useState<UrlResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -67,7 +69,7 @@ export default function UrlIntelligence() {
     setError('');
     setCaseId(null);
     try {
-      const res = await api.analyzeUrl(target);
+      const res = await api.analyzeUrl(target, { deepScan });
       if (ticket !== seq.current) return;
       setResult(res.analysis as UrlResult);
     } catch (err) {
@@ -188,6 +190,15 @@ export default function UrlIntelligence() {
             </button>
           ))}
         </div>
+        <label className="mt-3 flex cursor-pointer items-center gap-2 text-[11px] text-ink-3">
+          <input
+            type="checkbox"
+            checked={deepScan}
+            onChange={(e) => setDeepScan(e.target.checked)}
+            className="h-3.5 w-3.5 accent-[var(--accent)]"
+          />
+          Deep scan: fetch the final page and inspect its HTML (SSRF-guarded, no JavaScript)
+        </label>
       </Card>
 
       {error && (
@@ -225,7 +236,24 @@ export default function UrlIntelligence() {
         <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-5">
             <Card className="p-5">
-              <div className="flex flex-wrap items-start justify-between gap-5">
+              <div className="flex flex-wrap items-center gap-2 border-b border-line pb-4">
+                <VerdictPill verdict={result.verdict.verdict} confidence={result.verdict.confidence} />
+                <span className="mono text-[10px] text-ink-3">{result.verdict.score}/100</span>
+                {result.verdict.categories.map((cat) => (
+                  <span
+                    key={cat}
+                    className="mono rounded border border-line bg-bg-1 px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.1em] text-ink-3"
+                  >
+                    {cat}
+                  </span>
+                ))}
+              </div>
+              {result.verdict.verdict === 'NO_INDICATORS' && result.verdict.disclaimer && (
+                <p className="mt-3 rounded-md border border-line bg-bg-1 px-3 py-2 text-[11px] leading-relaxed text-ink-3">
+                  {result.verdict.disclaimer}
+                </p>
+              )}
+              <div className="mt-4 flex flex-wrap items-start justify-between gap-5">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <Label>Structural verdict</Label>
@@ -233,12 +261,19 @@ export default function UrlIntelligence() {
                       <span
                         className={cn(
                           'mono rounded border px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.1em]',
-                          enrichment.mode === 'live'
+                          enrichment.dataStatus === 'live'
                             ? 'border-ok/30 bg-ok/[0.07] text-ok'
-                            : 'border-warn/30 bg-warn/[0.07] text-warn',
+                            : enrichment.dataStatus === 'fixture'
+                              ? 'border-warn/30 bg-warn/[0.07] text-warn'
+                              : 'border-line bg-bg-1 text-ink-3',
                         )}
+                        data-testid="data-status-badge"
                       >
-                        {enrichment.mode}
+                        {enrichment.dataStatus === 'live'
+                          ? 'live data'
+                          : enrichment.dataStatus === 'fixture'
+                            ? 'demo fixture'
+                            : 'no network data'}
                       </span>
                     )}
                   </div>
@@ -516,6 +551,25 @@ export default function UrlIntelligence() {
                   </div>
                 </div>
               </div>
+            </Card>
+
+            <Card className="p-4" data-testid="coverage-panel">
+              <div className="flex items-center justify-between">
+                <Label>What we could not check</Label>
+                <span className="mono text-[9px] text-ink-3">{result.verdict.coverage.checksRun.length} RAN</span>
+              </div>
+              <ul className="mt-3 space-y-2">
+                {result.verdict.coverage.checksSkipped.map((skip) => (
+                  <li key={skip.id} className="flex gap-2 text-[11px] leading-relaxed text-ink-3">
+                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--fill-5)]" />
+                    <span>
+                      <span className="mono text-[9px] uppercase tracking-[0.1em] text-ink-2">{skip.id}</span>
+                      <br />
+                      {skip.reason}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </Card>
 
             <Card className="p-4">

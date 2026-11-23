@@ -96,7 +96,7 @@ app.post(
     const input = String(req.body?.url ?? '').trim();
     if (!input) return res.status(400).json({ ok: false, error: 'URL is required' });
     try {
-      const result = await enrichUrl(input);
+      const result = await enrichUrl(input, { deepScan: Boolean(req.body?.deepScan) });
       let caseId: string | undefined;
       if (req.body?.save) {
         const saved = saveCase({

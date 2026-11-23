@@ -179,6 +179,18 @@ test('4. URL engine flags look-alike URL and clears official SBI domain', async 
   });
 });
 
+test('4b. deep scan refuses loopback, private and metadata targets', async () => {
+  const targets = ['http://127.0.0.1/x', 'http://10.0.0.5/x', 'http://169.254.169.254/latest/meta-data', 'http://[::1]/x'];
+  for (const url of targets) {
+    const res = await call(main, '/api/analyze/url', { method: 'POST', json: { url, deepScan: true } });
+    assert.equal(res.status, 200, `unexpected status for ${url}`);
+    const skip = res.body.analysis.verdict.coverage.checksSkipped.find((s) => s.id === 'deep-scan');
+    assert.ok(skip, `missing deep-scan coverage entry for ${url}`);
+    assert.match(skip.reason, /refused/i, `deep scan did not refuse ${url}: ${skip.reason}`);
+  }
+  evidence('SSRF guard', { refused: targets });
+});
+
 test('5. Edge cases return clean results or clean errors', async () => {
   const empty = await call(main, '/api/analyze/message', { method: 'POST', json: { text: '' } });
   assert.equal(empty.status, 400);

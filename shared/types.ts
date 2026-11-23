@@ -137,6 +137,8 @@ export interface TlsInfo {
 
 export interface Enrichment {
   mode: 'live' | 'cached';
+  /** Honest provenance of the enrichment fields. */
+  dataStatus: 'live' | 'fixture' | 'none';
   redirects: RedirectHop[];
   registration: RegistrationInfo;
   dns: DnsInfo;

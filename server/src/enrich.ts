@@ -1,9 +1,12 @@
 import { promises as dns } from 'node:dns';
 import net from 'node:net';
 import tls from 'node:tls';
-import type { DnsInfo, Enrichment, RedirectHop, RegistrationInfo, TlsInfo, UrlAnalysis, UrlHeuristic } from '../../shared/types';
+import type { CoverageCheck, DnsInfo, Enrichment, RedirectHop, RegistrationInfo, TlsInfo, UrlAnalysis, UrlHeuristic } from '../../shared/types';
 import { analyzeUrl, riskFromScore } from '../../shared/url';
-import { dnsFixture, redirectFixture, registrationFixture, tlsFixture } from './fixtures';
+import { computeVerdict } from '../../shared/verdict';
+import { deepScan } from './deep-scan';
+import { dnsFixture, hasFixture, redirectFixture, registrationFixture, tlsFixture } from './fixtures';
+import { reputationLookup } from './reputation';
 
 const TIMEOUT = 4000;
 const FORCE_OFFLINE = process.env.TRACE_FORCE_OFFLINE === '1';
@@ -203,6 +206,18 @@ async function followRedirects(start: string): Promise<{ hops: RedirectHop[]; li
   }
 }
 
+function emptyRegistration(): RegistrationInfo {
+  return { registrar: '', createdAt: null, ageDays: null, status: [], nameservers: [] };
+}
+
+function emptyDns(): DnsInfo {
+  return { a: [], mx: [], ns: [] };
+}
+
+function emptyTls(): TlsInfo {
+  return { issuer: '', subject: '', validFrom: '', validTo: '' };
+}
+
 export function applyEnrichment(analysis: UrlAnalysis, enrichment: Enrichment): UrlAnalysis & { enrichment: Enrichment } {
   const age = enrichment.registration.ageDays;
   const heuristics: UrlHeuristic[] = [...analysis.heuristics];
@@ -225,43 +240,159 @@ export function applyEnrichment(analysis: UrlAnalysis, enrichment: Enrichment): 
     });
   }
   const score = Math.min(100, heuristics.reduce((sum, h) => sum + (h.triggered ? h.weight : 0), 0));
-  return { ...analysis, heuristics, score, riskLabel: riskFromScore(score), enrichment };
+
+  const networkSkipped =
+    enrichment.dataStatus === 'none'
+      ? [
+          { id: 'registration', reason: 'No RDAP registration data is available for this domain.' },
+          { id: 'dns', reason: 'No DNS records were returned for this domain.' },
+          { id: 'tls', reason: 'No TLS certificate data is available for this domain.' },
+          { id: 'redirects', reason: 'The redirect chain was not resolved.' },
+        ]
+      : enrichment.dataStatus === 'fixture'
+        ? [{ id: 'live-network', reason: 'Demo fixture data is shown; no live RDAP/DNS/TLS lookup was made.' }]
+        : [];
+  const baseSkipped = analysis.verdict.coverage.checksSkipped.filter(
+    (check) => !['domain-age', 'dns-tls', 'registration', 'dns', 'tls', 'redirects', 'live-network'].includes(check.id),
+  );
+  const coverage = {
+    checksRun: [
+      ...analysis.verdict.coverage.checksRun,
+      ...(enrichment.dataStatus !== 'none' ? ['registration / DNS / TLS / redirect enrichment'] : []),
+    ],
+    checksSkipped: [...baseSkipped, ...networkSkipped],
+  };
+  const verdict = computeVerdict({
+    score,
+    findings: heuristics.map((h) => ({
+      id: h.id,
+      weight: h.weight,
+      evidence: h.evidence,
+      explanation: h.explanation,
+      category: h.category,
+      triggered: h.triggered,
+    })),
+    coverage,
+    poorCoverage: enrichment.dataStatus === 'none',
+  });
+
+  return { ...analysis, heuristics, score, riskLabel: riskFromScore(score), enrichment, verdict };
 }
 
-export async function enrichUrl(input: string): Promise<UrlAnalysis & { enrichment: Enrichment }> {
+/** Merge deep-scan and reputation findings into an already-enriched result. */
+function applyExtras(
+  result: UrlAnalysis & { enrichment: Enrichment },
+  extras: { heuristics: UrlHeuristic[]; checksRun: string[]; checksSkipped: CoverageCheck[]; poorCoverage?: boolean; note?: string },
+): UrlAnalysis & { enrichment: Enrichment } {
+  if (!extras.heuristics.length && !extras.checksSkipped.length && !extras.checksRun.length) return result;
+  const heuristics = [...result.heuristics, ...extras.heuristics];
+  const score = Math.min(100, heuristics.reduce((sum, h) => sum + (h.triggered ? h.weight : 0), 0));
+  const coverage = {
+    checksRun: [...new Set([...result.verdict.coverage.checksRun, ...extras.checksRun])],
+    checksSkipped: [
+      ...result.verdict.coverage.checksSkipped.filter((check) => !extras.checksSkipped.some((extra) => extra.id === check.id)),
+      ...extras.checksSkipped,
+    ],
+  };
+  const verdict = computeVerdict({
+    score,
+    findings: heuristics.map((h) => ({
+      id: h.id,
+      weight: h.weight,
+      evidence: h.evidence,
+      explanation: h.explanation,
+      category: h.category,
+      triggered: h.triggered,
+    })),
+    coverage,
+    poorCoverage: result.enrichment.dataStatus === 'none' || extras.poorCoverage,
+  });
+  return {
+    ...result,
+    heuristics,
+    score,
+    riskLabel: riskFromScore(score),
+    verdict,
+    enrichment: { ...result.enrichment, note: [result.enrichment.note, extras.note].filter(Boolean).join(' ') },
+  };
+}
+
+export async function enrichUrl(
+  input: string,
+  options: { deepScan?: boolean } = {},
+): Promise<UrlAnalysis & { enrichment: Enrichment }> {
   const analysis = analyzeUrl(input);
   const domain = analysis.registrableDomain;
   const cached = cache.get(domain);
+  let base: UrlAnalysis & { enrichment: Enrichment };
   if (cached && Date.now() - cached.at < CACHE_TTL) {
-    return applyEnrichment(analysis, cached.value);
+    base = applyEnrichment(analysis, cached.value);
+  } else {
+    const [rdapResult, dnsResult, tlsResult, redirectResult] = await Promise.all([
+      rdap(domain),
+      resolveDns(domain),
+      tlsCert(analysis.breakdown.host),
+      followRedirects(analysis.normalized),
+    ]);
+
+    let liveCount = 0;
+    if (rdapResult) liveCount++;
+    if (dnsResult) liveCount++;
+    if (tlsResult) liveCount++;
+    if (redirectResult.live) liveCount++;
+
+    const live = liveCount >= 2;
+    const fixtureAvailable = hasFixture(domain);
+    const dataStatus: Enrichment['dataStatus'] = live ? 'live' : fixtureAvailable ? 'fixture' : 'none';
+    const enrichment: Enrichment = {
+      mode: live ? 'live' : 'cached',
+      dataStatus,
+      redirects: live ? redirectResult.hops : dataStatus === 'fixture' ? redirectFixture(analysis.normalized) : [],
+      registration: live
+        ? rdapResult ?? emptyRegistration()
+        : dataStatus === 'fixture'
+          ? registrationFixture(domain)
+          : emptyRegistration(),
+      dns: live ? dnsResult ?? emptyDns() : dataStatus === 'fixture' ? dnsFixture(domain) : emptyDns(),
+      tls: live
+        ? tlsResult ?? emptyTls()
+        : dataStatus === 'fixture'
+          ? tlsFixture(analysis.breakdown.host)
+          : emptyTls(),
+      note:
+        dataStatus === 'live'
+          ? `Resolved live: ${liveCount}/4 network sources responded within ${TIMEOUT / 1000}s.`
+          : dataStatus === 'fixture'
+            ? FORCE_OFFLINE
+              ? 'TRACE_FORCE_OFFLINE=1 — no outbound lookups attempted; documented demo fixture used for this domain.'
+              : 'Network unavailable or lookup blocked — documented demo fixture used for this domain.'
+            : 'No live or fixture data exists for this domain. Nothing was invented; registration, DNS, TLS and redirects are reported as unavailable.',
+    };
+    if (live) cache.set(domain, { value: enrichment, at: Date.now() });
+    base = applyEnrichment(analysis, enrichment);
   }
 
-  const [rdapResult, dnsResult, tlsResult, redirectResult] = await Promise.all([
-    rdap(domain),
-    resolveDns(domain),
-    tlsCert(analysis.breakdown.host),
-    followRedirects(analysis.normalized),
-  ]);
+  const reputation = await reputationLookup(analysis.normalized);
+  let result = applyExtras(base, {
+    heuristics: reputation.heuristics,
+    checksRun: reputation.heuristics.length ? ['external reputation lookup'] : [],
+    checksSkipped: reputation.skipped,
+  });
 
-  let liveCount = 0;
-  if (rdapResult) liveCount++;
-  if (dnsResult) liveCount++;
-  if (tlsResult) liveCount++;
-  if (redirectResult.live) liveCount++;
-
-  const mode: 'live' | 'cached' = liveCount >= 2 ? 'live' : 'cached';
-  const enrichment: Enrichment = {
-    mode,
-    redirects: redirectResult.live ? redirectResult.hops : redirectFixture(analysis.normalized),
-    registration: rdapResult ?? registrationFixture(domain),
-    dns: dnsResult ?? dnsFixture(domain),
-    tls: tlsResult ?? tlsFixture(analysis.breakdown.host),
-    note: FORCE_OFFLINE
-      ? 'TRACE_FORCE_OFFLINE=1 — no outbound lookups attempted; deterministic local fixtures used.'
-      : mode === 'live'
-        ? `Resolved live: ${liveCount}/4 network sources responded within ${TIMEOUT / 1000}s.`
-        : 'Network unavailable or lookup blocked — deterministic local fixtures used. Analysis remains complete.',
-  };
-  if (mode === 'live') cache.set(domain, { value: enrichment, at: Date.now() });
-  return applyEnrichment(analysis, enrichment);
+  if (options.deepScan) {
+    const scan = await deepScan(analysis.normalized);
+    result = applyExtras(result, {
+      heuristics: scan.heuristics,
+      checksRun: scan.checksRun,
+      checksSkipped: scan.checksSkipped,
+      note: scan.note,
+    });
+  } else {
+    result = applyExtras(result, {
+      heuristics: [],
+      checksRun: [],
+      checksSkipped: [{ id: 'deep-scan', reason: 'Deep scan is off; the landing page was not fetched.' }],
+    });
+  }
+  return result;
 }

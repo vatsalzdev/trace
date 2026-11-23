@@ -1,5 +1,5 @@
 {
-  "reportId": "RPT-2026-0019-MWSY6D0F",
+  "reportId": "RPT-2026-0019-MWTJBMQH",
   "case": {
     "id": "TRC-2026-0019",
     "title": "QA report case",
@@ -8,8 +8,8 @@
     "risk_score": 95,
     "source_type": "message",
     "raw_input": "URGENT! SBI KYC http://sbi-kyc-verify.in pay kyc.support@fakebank",
-    "created_at": "2026-11-23T07:31:41.290Z",
-    "updated_at": "2026-11-23T07:31:41.290Z",
+    "created_at": "2026-11-23T17:23:39.322Z",
+    "updated_at": "2026-11-23T17:23:39.322Z",
     "notes": "",
     "entity_count": 3,
     "entities": [
@@ -18,7 +18,7 @@
         "type": "domain",
         "value": "sbi-kyc-verify.in",
         "first_seen": "2026-10-10T10:00:00.000Z",
-        "last_seen": "2026-11-23T07:31:41.290Z",
+        "last_seen": "2026-11-23T17:23:39.322Z",
         "risk_score": 100,
         "metadata_json": "{\"cases\":[\"TRC-2026-0001\",\"TRC-2026-0002\",\"TRC-2026-0003\",\"TRC-2026-0007\",\"TRC-2026-0011\",\"TRC-2026-0015\",\"TRC-2026-0016\",\"TRC-2026-0017\",\"TRC-2026-0018\",\"TRC-2026-0019\"],\"suspicious\":false,\"note\":\"classes.dex\"}"
       },
@@ -27,7 +27,7 @@
         "type": "upi",
         "value": "kyc.support@fakebank",
         "first_seen": "2026-10-10T10:00:00.000Z",
-        "last_seen": "2026-11-23T07:31:41.290Z",
+        "last_seen": "2026-11-23T17:23:39.322Z",
         "risk_score": 100,
         "metadata_json": "{\"cases\":[\"TRC-2026-0001\",\"TRC-2026-0002\",\"TRC-2026-0003\",\"TRC-2026-0007\",\"TRC-2026-0011\",\"TRC-2026-0015\",\"TRC-2026-0017\",\"TRC-2026-0018\",\"TRC-2026-0019\"],\"suspicious\":true,\"note\":\"unregistered handle @fakebank\"}"
       },
@@ -35,8 +35,8 @@
         "id": 39,
         "type": "url",
         "value": "http://sbi-kyc-verify.in",
-        "first_seen": "2026-11-23T07:31:41.290Z",
-        "last_seen": "2026-11-23T07:31:41.290Z",
+        "first_seen": "2026-11-23T17:23:39.322Z",
+        "last_seen": "2026-11-23T17:23:39.322Z",
         "risk_score": 95,
         "metadata_json": "{\"cases\":[\"TRC-2026-0019\"],\"suspicious\":false,\"note\":null}"
       }
@@ -283,9 +283,63 @@
                     "triggered": true,
                     "evidence": [
                       "\"sbi\" appears in sbi-kyc-verify.in/",
-                      "official domains: sbi.co.in, onlinesbi.sbi, sbiyono.sbi, sbi, sbicard.com"
+                      "official domains: sbi.co.in, onlinesbi.sbi, sbiyono.sbi, sbicard.com"
                     ],
                     "explanation": "A protected brand appears in the host or path, but the registrable domain is not owned by that brand.",
+                    "category": "identity"
+                  },
+                  {
+                    "id": "homoglyph-skeleton",
+                    "name": "Confusable skeleton matches a trusted name",
+                    "weight": 30,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "After Unicode confusable folding, the registrable label reads as a protected brand or popular domain that this host does not own.",
+                    "category": "identity"
+                  },
+                  {
+                    "id": "mixed-script",
+                    "name": "Mixed-script homoglyph hostname",
+                    "weight": 30,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "One label mixes Latin with Cyrillic or Greek letters that render identically — the classic homoglyph attack.",
+                    "category": "identity"
+                  },
+                  {
+                    "id": "random-label",
+                    "name": "Random-looking domain label",
+                    "weight": 15,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Machine-generated labels lack normal vowel structure or mix in digits, which is typical of bulk phishing registration.",
+                    "category": "structure"
+                  },
+                  {
+                    "id": "keyword-stuffing",
+                    "name": "Lure-word stuffing in hostname",
+                    "weight": 15,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Three or more security or payment words packed into the hostname is a template signature, not a brand name.",
+                    "category": "structure"
+                  },
+                  {
+                    "id": "embedded-domain",
+                    "name": "Another domain embedded in the host",
+                    "weight": 25,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "The host spells out a trusted domain inside its own name (paypal.com.evil.xyz); the real owner is the last labels.",
+                    "category": "identity"
+                  },
+                  {
+                    "id": "tld-swap",
+                    "name": "Trusted name reused on a different TLD",
+                    "weight": 20,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Reusing a well-known second-level name on a cheap or unfamiliar TLD is a common look-alike strategy.",
                     "category": "identity"
                   },
                   {
@@ -356,6 +410,15 @@
                     "category": "transport"
                   },
                   {
+                    "id": "dangerous-scheme",
+                    "name": "Script or data URL scheme",
+                    "weight": 35,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "A javascript:, data: or file: link does not point to a website; it runs or embeds content in the browser context.",
+                    "category": "structure"
+                  },
+                  {
                     "id": "at-sign",
                     "name": "Userinfo obfuscation (@ in URL)",
                     "weight": 20,
@@ -392,6 +455,24 @@
                     "category": "transport"
                   },
                   {
+                    "id": "encoded-path",
+                    "name": "Encoded path obfuscation",
+                    "weight": 10,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "Heavy or double encoding hides the real path from filters and from the person reading the link.",
+                    "category": "structure"
+                  },
+                  {
+                    "id": "blocklist",
+                    "name": "Listed on local blocklist",
+                    "weight": 40,
+                    "triggered": false,
+                    "evidence": [],
+                    "explanation": "The domain appears in a locally imported phishing blocklist snapshot.",
+                    "category": "infrastructure"
+                  },
+                  {
                     "id": "entropy",
                     "name": "High-entropy domain label",
                     "weight": 10,
@@ -407,7 +488,7 @@
                     "triggered": true,
                     "evidence": [
                       "registrable label \"sbi-kyc-verify\" imitates \"sbi\"",
-                      "edit distance to \"sbi\": 11",
+                      "edit distance to \"sbi\": 9",
                       "legitimate domain: sbi.co.in"
                     ],
                     "explanation": "The registrable domain is a look-alike of SBI; the brand does not own it.",
@@ -438,7 +519,7 @@
                       "weight": 30,
                       "evidence": [
                         "\"sbi\" appears in sbi-kyc-verify.in/",
-                        "official domains: sbi.co.in, onlinesbi.sbi, sbiyono.sbi, sbi, sbicard.com"
+                        "official domains: sbi.co.in, onlinesbi.sbi, sbiyono.sbi, sbicard.com"
                       ],
                       "explanation": "A protected brand appears in the host or path, but the registrable domain is not owned by that brand.",
                       "category": "identity"
@@ -466,7 +547,7 @@
                       "weight": 30,
                       "evidence": [
                         "registrable label \"sbi-kyc-verify\" imitates \"sbi\"",
-                        "edit distance to \"sbi\": 11",
+                        "edit distance to \"sbi\": 9",
                         "legitimate domain: sbi.co.in"
                       ],
                       "explanation": "The registrable domain is a look-alike of SBI; the brand does not own it.",
@@ -604,7 +685,7 @@
             ]
           }
         },
-        "created_at": "2026-11-23T07:31:41.290Z"
+        "created_at": "2026-11-23T17:23:39.322Z"
       }
     ],
     "events": [
@@ -613,19 +694,19 @@
         "case_id": "TRC-2026-0019",
         "type": "entities",
         "message": "3 indicators linked (1 new)",
-        "created_at": "2026-11-23T07:31:41.290Z"
+        "created_at": "2026-11-23T17:23:39.322Z"
       },
       {
         "id": 44,
         "case_id": "TRC-2026-0019",
         "type": "created",
         "message": "Case opened from message analysis",
-        "created_at": "2026-11-23T07:31:41.290Z"
+        "created_at": "2026-11-23T17:23:39.322Z"
       }
     ]
   },
-  "generatedAt": "2026-11-23T07:31:41.357Z",
-  "generatedAtIst": "Monday, 23 November 2026 at 1:01:41 pm IST",
+  "generatedAt": "2026-11-23T17:23:39.329Z",
+  "generatedAtIst": "Monday, 23 November 2026 at 10:53:39 pm IST",
   "analyst": "QA Analyst",
   "analysis": {
     "input": "URGENT! SBI KYC http://sbi-kyc-verify.in pay kyc.support@fakebank",
@@ -864,9 +945,63 @@
               "triggered": true,
               "evidence": [
                 "\"sbi\" appears in sbi-kyc-verify.in/",
-                "official domains: sbi.co.in, onlinesbi.sbi, sbiyono.sbi, sbi, sbicard.com"
+                "official domains: sbi.co.in, onlinesbi.sbi, sbiyono.sbi, sbicard.com"
               ],
               "explanation": "A protected brand appears in the host or path, but the registrable domain is not owned by that brand.",
+              "category": "identity"
+            },
+            {
+              "id": "homoglyph-skeleton",
+              "name": "Confusable skeleton matches a trusted name",
+              "weight": 30,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "After Unicode confusable folding, the registrable label reads as a protected brand or popular domain that this host does not own.",
+              "category": "identity"
+            },
+            {
+              "id": "mixed-script",
+              "name": "Mixed-script homoglyph hostname",
+              "weight": 30,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "One label mixes Latin with Cyrillic or Greek letters that render identically — the classic homoglyph attack.",
+              "category": "identity"
+            },
+            {
+              "id": "random-label",
+              "name": "Random-looking domain label",
+              "weight": 15,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Machine-generated labels lack normal vowel structure or mix in digits, which is typical of bulk phishing registration.",
+              "category": "structure"
+            },
+            {
+              "id": "keyword-stuffing",
+              "name": "Lure-word stuffing in hostname",
+              "weight": 15,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Three or more security or payment words packed into the hostname is a template signature, not a brand name.",
+              "category": "structure"
+            },
+            {
+              "id": "embedded-domain",
+              "name": "Another domain embedded in the host",
+              "weight": 25,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "The host spells out a trusted domain inside its own name (paypal.com.evil.xyz); the real owner is the last labels.",
+              "category": "identity"
+            },
+            {
+              "id": "tld-swap",
+              "name": "Trusted name reused on a different TLD",
+              "weight": 20,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Reusing a well-known second-level name on a cheap or unfamiliar TLD is a common look-alike strategy.",
               "category": "identity"
             },
             {
@@ -937,6 +1072,15 @@
               "category": "transport"
             },
             {
+              "id": "dangerous-scheme",
+              "name": "Script or data URL scheme",
+              "weight": 35,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "A javascript:, data: or file: link does not point to a website; it runs or embeds content in the browser context.",
+              "category": "structure"
+            },
+            {
               "id": "at-sign",
               "name": "Userinfo obfuscation (@ in URL)",
               "weight": 20,
@@ -973,6 +1117,24 @@
               "category": "transport"
             },
             {
+              "id": "encoded-path",
+              "name": "Encoded path obfuscation",
+              "weight": 10,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "Heavy or double encoding hides the real path from filters and from the person reading the link.",
+              "category": "structure"
+            },
+            {
+              "id": "blocklist",
+              "name": "Listed on local blocklist",
+              "weight": 40,
+              "triggered": false,
+              "evidence": [],
+              "explanation": "The domain appears in a locally imported phishing blocklist snapshot.",
+              "category": "infrastructure"
+            },
+            {
               "id": "entropy",
               "name": "High-entropy domain label",
               "weight": 10,
@@ -988,7 +1150,7 @@
               "triggered": true,
               "evidence": [
                 "registrable label \"sbi-kyc-verify\" imitates \"sbi\"",
-                "edit distance to \"sbi\": 11",
+                "edit distance to \"sbi\": 9",
                 "legitimate domain: sbi.co.in"
               ],
               "explanation": "The registrable domain is a look-alike of SBI; the brand does not own it.",
@@ -1019,7 +1181,7 @@
                 "weight": 30,
                 "evidence": [
                   "\"sbi\" appears in sbi-kyc-verify.in/",
-                  "official domains: sbi.co.in, onlinesbi.sbi, sbiyono.sbi, sbi, sbicard.com"
+                  "official domains: sbi.co.in, onlinesbi.sbi, sbiyono.sbi, sbicard.com"
                 ],
                 "explanation": "A protected brand appears in the host or path, but the registrable domain is not owned by that brand.",
                 "category": "identity"
@@ -1047,7 +1209,7 @@
                 "weight": 30,
                 "evidence": [
                   "registrable label \"sbi-kyc-verify\" imitates \"sbi\"",
-                  "edit distance to \"sbi\": 11",
+                  "edit distance to \"sbi\": 9",
                   "legitimate domain: sbi.co.in"
                 ],
                 "explanation": "The registrable domain is a look-alike of SBI; the brand does not own it.",
@@ -1401,17 +1563,17 @@
       "case_id": "TRC-2026-0019",
       "type": "entities",
       "message": "3 indicators linked (1 new)",
-      "created_at": "2026-11-23T07:31:41.290Z"
+      "created_at": "2026-11-23T17:23:39.322Z"
     },
     {
       "id": 44,
       "case_id": "TRC-2026-0019",
       "type": "created",
       "message": "Case opened from message analysis",
-      "created_at": "2026-11-23T07:31:41.290Z"
+      "created_at": "2026-11-23T17:23:39.322Z"
     }
   ],
   "notes": "",
   "methodology": "Deterministic rule-based analysis; no machine learning used. Every score is the sum of documented rule weights, capped at 100, with the triggering evidence retained verbatim.",
-  "integrityHash": "137311efa35d1b97c0c504406943f9ea235b8c122d7b82175116211e41dd109a"
+  "integrityHash": "5a4c581699b78d9840fe6fff709afe4e9167c67284195f8807de2a4812cbc8e9"
 }

@@ -112,6 +112,10 @@ function hashInt(value: string): number {
   return h.readUInt32BE(0);
 }
 
+export function hasFixture(domain: string): boolean {
+  return Boolean(FIXTURES[domain]);
+}
+
 export function fixtureFor(domain: string): DomainFixture {
   const known = FIXTURES[domain];
   if (known) return known;

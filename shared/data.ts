@@ -1,39 +1,21 @@
+import brandsJson from '../data/brands.json';
+import topDomainsJson from '../data/top-domains.json';
+import watchlistJson from '../data/watchlist.json';
+
 export interface Brand {
   name: string;
   keywords: string[];
   domains: string[];
   sector: string;
+  appPackages?: string[];
 }
 
-/** Brands commonly impersonated in Indian cybercrime. Official domains are used to
- *  suppress false positives — a brand mention alone is never a signal. */
-export const BRANDS: Brand[] = [
-  { name: 'SBI', keywords: ['sbi', 'state bank', 'onlinesbi', 'yono'], domains: ['sbi.co.in', 'onlinesbi.sbi', 'sbiyono.sbi', 'sbi', 'sbicard.com'], sector: 'bank' },
-  { name: 'HDFC Bank', keywords: ['hdfc'], domains: ['hdfcbank.com', 'hdfc.com', 'hdfcbank.net'], sector: 'bank' },
-  { name: 'ICICI Bank', keywords: ['icici'], domains: ['icicibank.com', 'icicibank.co.in'], sector: 'bank' },
-  { name: 'Axis Bank', keywords: ['axis bank', 'axisbank'], domains: ['axisbank.com', 'axisbank.co.in'], sector: 'bank' },
-  { name: 'Punjab National Bank', keywords: ['pnb', 'punjab national'], domains: ['pnbindia.in', 'pnb.co.in'], sector: 'bank' },
-  { name: 'Kotak Bank', keywords: ['kotak'], domains: ['kotak.com', 'kotakbank.com'], sector: 'bank' },
-  { name: 'Paytm', keywords: ['paytm'], domains: ['paytm.com', 'paytmbank.com', 'paytm.in'], sector: 'wallet' },
-  { name: 'PhonePe', keywords: ['phonepe', 'phone pe'], domains: ['phonepe.com'], sector: 'wallet' },
-  { name: 'Google Pay', keywords: ['gpay', 'google pay'], domains: ['google.com', 'pay.google.com'], sector: 'wallet' },
-  { name: 'Amazon', keywords: ['amazon'], domains: ['amazon.in', 'amazon.com', 'amazonpay.in'], sector: 'commerce' },
-  { name: 'Flipkart', keywords: ['flipkart'], domains: ['flipkart.com'], sector: 'commerce' },
-  { name: 'India Post', keywords: ['india post', 'indiapost'], domains: ['indiapost.gov.in', 'indiapost.in'], sector: 'logistics' },
-  { name: 'Income Tax Department', keywords: ['income tax', 'incometax'], domains: ['incometax.gov.in', 'incometaxindia.gov.in'], sector: 'government' },
-  { name: 'UIDAI', keywords: ['uidai', 'aadhaar', 'aadhar'], domains: ['uidai.gov.in', 'eaadhaar.uidai.gov.in'], sector: 'government' },
-  { name: 'TRAI', keywords: ['trai'], domains: ['trai.gov.in'], sector: 'government' },
-  { name: 'CBI', keywords: ['cbi'], domains: ['cbi.gov.in'], sector: 'law' },
-  { name: 'Customs', keywords: ['customs', 'custom department'], domains: ['cbic.gov.in', 'icegate.gov.in'], sector: 'government' },
-  { name: 'FedEx', keywords: ['fedex'], domains: ['fedex.com'], sector: 'logistics' },
-  { name: 'Blue Dart', keywords: ['bluedart', 'blue dart'], domains: ['bluedart.com'], sector: 'logistics' },
-  { name: 'Jio', keywords: ['jio'], domains: ['jio.com', 'jiomart.com'], sector: 'telecom' },
-  { name: 'Airtel', keywords: ['airtel'], domains: ['airtel.in', 'airtel.com'], sector: 'telecom' },
-  { name: 'LIC', keywords: ['lic'], domains: ['licindia.in'], sector: 'insurance' },
-  { name: 'EPFO', keywords: ['epfo', 'pf claim'], domains: ['epfindia.gov.in', 'epfo.gov.in'], sector: 'government' },
-  { name: 'IRCTC', keywords: ['irctc'], domains: ['irctc.co.in', 'irctc.com'], sector: 'travel' },
-  { name: 'Electricity Board', keywords: ['electricity board', 'electricity bill', 'bijli'], domains: ['bescom.org', 'mahadiscom.in', 'tnebnet.org'], sector: 'utility' },
-];
+/** Brands commonly impersonated in Indian and global cybercrime. Official domains
+ *  suppress false positives: a brand mention alone is never a signal. */
+export const BRANDS: Brand[] = [...(brandsJson as Brand[]), ...(watchlistJson as Brand[])];
+
+/** Bundled popular-domain list used for TLD-swap and embedded-domain checks. */
+export const TOP_DOMAINS: string[] = topDomainsJson as string[];
 
 /** UPI handles issued by regulated PSPs. Anything outside this list is flagged. */
 export const KNOWN_UPI_HANDLES = new Set([

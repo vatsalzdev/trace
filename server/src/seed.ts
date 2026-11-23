@@ -158,6 +158,7 @@ function cachedUrlAnalysis(raw: string) {
   const domain = base.registrableDomain;
   const enrichment = {
     mode: 'cached' as const,
+    dataStatus: 'fixture' as const,
     redirects: redirectFixture(base.normalized),
     registration: registrationFixture(domain),
     dns: dnsFixture(domain),
